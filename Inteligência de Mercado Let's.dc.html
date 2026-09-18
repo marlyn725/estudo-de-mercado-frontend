@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="_ds/let-s-design-system-bc1f3a3b-c172-4a40-981d-b337af4797fb/colors_and_type.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
+<style>
+@font-face { font-family: 'Neo Sans Pro'; src: url('_ds/let-s-design-system-bc1f3a3b-c172-4a40-981d-b337af4797fb/fonts/NeoSansProRegular.OTF') format('opentype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Neo Sans Pro'; src: url('_ds/let-s-design-system-bc1f3a3b-c172-4a40-981d-b337af4797fb/fonts/NeoSansProMedium.OTF') format('opentype'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Neo Sans Pro'; src: url('_ds/let-s-design-system-bc1f3a3b-c172-4a40-981d-b337af4797fb/fonts/NeoSansProBold.OTF') format('opentype'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Neo Sans Pro'; src: url('_ds/let-s-design-system-bc1f3a3b-c172-4a40-981d-b337af4797fb/fonts/NeoSansProBlack.OTF') format('opentype'); font-weight: 800; font-display: swap; }
+html, body { margin: 0; padding: 0; background: #14161a; }
+body { font-family: 'Open Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: #F15A22; text-decoration: none; }
+a:hover { opacity: .75; }
+* { box-sizing: border-box; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #cfd2d6; border-radius: 8px; }
+@keyframes lets-spin { to { transform: rotate(360deg); } }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; background: #14161a; display: flex; align-items: flex-start; justify-content: flex-start; padding: 28px 28px 40px; overflow-x: auto;">
+<div style="flex: 0 0 1440px; width: 1440px; min-width: 1440px; height: 900px; margin: 0 auto; background: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 30px 90px rgba(0,0,0,.55); display: flex; flex-direction: column;">
+
+  <div style="height: 38px; flex: 0 0 38px; background: #23262c; display: flex; align-items: center; padding: 0 14px; gap: 14px; border-bottom: 1px solid #000;">
+    <div style="display: flex; gap: 8px;">
+      <div style="width: 12px; height: 12px; border-radius: 999px; background: #ff5f57;"></div>
+      <div style="width: 12px; height: 12px; border-radius: 999px; background: #febc2e;"></div>
+      <div style="width: 12px; height: 12px; border-radius: 999px; background: #28c840;"></div>
+    </div>
+    <div style="flex: 1; text-align: center; font-family: 'Neo Sans Pro', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: .04em; color: #A09BA2;">Let's Market Intelligence — aplicação local</div>
+    <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #A09BA2;">
+      <div style="width: 7px; height: 7px; border-radius: 999px; background: #21a35a;"></div>
+      <span>receita_base.sqlite conectado</span>
+    </div>
+  </div>
+
+  <div style="flex: 1; min-height: 0; display: flex;">
+
+    <div style="width: 232px; flex: 0 0 232px; background: #2F323B; display: flex; flex-direction: column;">
+      <div style="height: 4px; background: #F15A22;"></div>
+      <div style="padding: 22px 20px 18px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; align-items: baseline; gap: 2px;">
+          <span style="font-family: 'Neo Sans Pro', sans-serif; font-weight: 800; font-size: 26px; color: #FFFFFF; letter-spacing: -.02em;">Let's</span>
+          <span style="width: 7px; height: 7px; border-radius: 999px; background: #F15A22; display: inline-block; margin-left: 3px;"></span>
+        </div>
+        <div style="font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #A09BA2;">Inteligência comercial</div>
+      </div>
+
+      <div style="padding: 0 12px; display: flex; flex-direction: column; gap: 2px;">
+        <sc-for list="{{ nav }}" as="item" hint-placeholder-count="6">
+          <div onClick="{{ item.onClick }}" title="{{ item.hint }}" style="{{ item.style }}">
+            <div style="{{ item.marker }}"></div>
+            <span style="flex: 1;">{{ item.label }}</span>
+            <span style="{{ item.badgeStyle }}">{{ item.badge }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="flex: 1;"></div>
+
+      <div style="margin: 16px 12px; padding: 14px; background: rgba(255,255,255,.05); border-radius: 8px; border-left: 3px solid #F15A22; display: flex; flex-direction: column; gap: 6px;">
+        <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 12px; font-weight: 700; color: #FFFFFF;">Segmentações salvas</div>
+        <sc-for list="{{ savedFilters }}" as="sf" hint-placeholder-count="3">
+          <div onClick="{{ sf.onClick }}" style="{{ sf.style }}">{{ sf.name }}</div>
+        </sc-for>
+      </div>
+
+      <div style="padding: 0 20px 18px; font-size: 10px; color: #6f7178; line-height: 1.5;">Let's GTF · VIXPAR<br>MVP local · v0.4</div>
+    </div>
+
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; background: #F5F5F5; position: relative;">
+
+      <div style="flex: 0 0 auto; background: #FFFFFF; border-bottom: 1px solid #e3e5e8; padding: 18px 28px 16px; display: flex; align-items: flex-end; gap: 20px;">
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+          <div style="font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #F15A22; font-weight: 700;">{{ screenEyebrow }}</div>
+          <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 26px; font-weight: 700; color: #000; line-height: 1.1;">{{ screenTitle }}</div>
+          <div style="font-size: 12.5px; color: #6c6c6c; max-width: 720px; line-height: 1.5;">{{ screenHelp }}</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <sc-for list="{{ headerActions }}" as="act" hint-placeholder-count="2">
+            <div onClick="{{ act.onClick }}" title="{{ act.hint }}" style="{{ act.style }}">{{ act.label }}</div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex: 1; min-height: 0; overflow: auto;">
+
+        <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 24px 28px 32px; display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;">
+              <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+                <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 8px;">
+                  <div style="font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">{{ k.label }}</div>
+                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 30px; font-weight: 700; color: #000; line-height: 1;">{{ k.value }}</div>
+                  <div style="font-size: 11.5px; color: #6c6c6c;">{{ k.note }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 14px; align-items: start;">
+              <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 20px;">
+                <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px;">
+                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000;">Top UFs por volume de estabelecimentos</div>
+                  <div style="font-size: 11px; color: #A09BA2;">somente situação ativa</div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 11px;">
+                  <sc-for list="{{ ufBars }}" as="u" hint-placeholder-count="8">
+                    <div style="display: grid; grid-template-columns: 34px 1fr 92px; align-items: center; gap: 12px;">
+                      <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13px; font-weight: 700; color: #2F323B;">{{ u.uf }}</div>
+                      <div style="height: 10px; background: #eef0f2; border-radius: 999px; overflow: hidden;">
+                        <div style="{{ u.barStyle }}"></div>
+                      </div>
+                      <div style="font-size: 12px; color: #2F323B; text-align: right; font-variant-numeric: tabular-nums;">{{ u.count }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 20px;">
+                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000; margin-bottom: 14px;">Situação cadastral da base</div>
+                  <div style="display: flex; height: 14px; border-radius: 999px; overflow: hidden; margin-bottom: 14px;">
+                    <sc-for list="{{ situacaoSlices }}" as="s" hint-placeholder-count="4">
+                      <div style="{{ s.style }}"></div>
+                    </sc-for>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <sc-for list="{{ situacaoSlices }}" as="s" hint-placeholder-count="4">
+                      <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #2F323B;">
+                        <div style="{{ s.dot }}"></div>
+                        <span style="flex: 1;">{{ s.label }}</span>
+                        <span style="font-variant-numeric: tabular-nums; color: #6c6c6c;">{{ s.count }}</span>
+                        <span style="width: 44px; text-align: right; font-weight: 600;">{{ s.pct }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000;">Arquivo de dados</div>
+                  <sc-for list="{{ fileMeta }}" as="f" hint-placeholder-count="4">
+                    <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; border-bottom: 1px dashed #e8eaec; padding-bottom: 8px;">
+                      <span style="color: #6c6c6c;">{{ f.label }}</span>
+                      <span style="color: #000; font-weight: 600; text-align: right;">{{ f.value }}</span>
+                    </div>
+                  </sc-for>
+                  <div style="font-size: 11.5px; color: #A09BA2; line-height: 1.5;">A base é lida diretamente do disco. Reimporte o dump da Receita Federal para atualizar.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isFiltro }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 24px 28px 120px; display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: start;">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+
+              <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 20px;">
+                <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px;">
+                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000;">Unidade federativa</div>
+                  <div style="font-size: 11.5px; color: #A09BA2;">multi-seleção · clique para incluir</div>
+                </div>
+                <div style="font-size: 12px; color: #6c6c6c; margin-bottom: 14px;">Filtra pelo estado do estabelecimento, não da matriz.</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                  <sc-for list="{{ ufChips }}" as="c" hint-placeholder-count="14">
+                    <div onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.uf }}</div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 20px;">
+                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000; margin-bottom: 4px;">CNAE principal</div>
+                <div style="font-size: 12px; color: #6c6c6c; margin-bottom: 14px;">Busque por código ou descrição. Subclasses são incluídas automaticamente.</div>
+                <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 9px 12px; margin-bottom: 12px;">
+                  <span style="color: #A09BA2; font-size: 13px;">⌕</span>
+                  <input value="{{ cnaeQuery }}" onChange="{{ onCnaeQuery }}" placeholder="ex.: 4923-0 — transporte rodoviário de carga" style="border: none; outline: none; flex: 1; font-family: 'Open Sans', sans-serif; font-size: 13px; color: #000; background: transparent;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 2px; max-height: 176px; overflow: auto;">
+                  <sc-for list="{{ cnaeList }}" as="c" hint-placeholder-count="6">
+                    <div onClick="{{ c.onClick }}" style="{{ c.style }}">
+                      <div style="{{ c.box }}">{{ c.tick }}</div>
+                      <span style="font-family: ui-monospace, monospace; font-size: 12px; color: #F15A22; width: 68px;">{{ c.code }}</span>
+                      <span style="flex: 1; font-size: 12.5px; color: #2F323B;">{{ c.desc }}</span>
+                      <span style="font-size: 11.5px; color: #A09BA2; font-variant-numeric: tabular-nums;">{{ c.count }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 20px;">
+                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000; margin-bottom: 4px;">Situação cadastral</div>
+                  <div style="font-size: 12px; color: #6c6c6c; margin-bottom: 14px;">Prospecção normalmente usa apenas "Ativa".</div>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <sc-for list="{{ sitOptions }}" as="s" hint-placeholder-count="4">
+                      <div onClick="{{ s.onClick }}" style="{{ s.style }}">
+                        <div style="{{ s.box }}">{{ s.tick }}</div>
+                        <span style="flex: 1; font-size: 12.5px;">{{ s.label }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 20px;">
+                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000; margin-bottom: 4px;">Porte</div>
+                  <div style="font-size: 12px; color: #6c6c6c; margin-bottom: 14px;">Derivado do capital social e do enquadramento.</div>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <sc-for list="{{ porteOptions }}" as="s" hint-placeholder-count="4">
+                      <div onClick="{{ s.onClick }}" style="{{ s.style }}">
+                        <div style="{{ s.box }}">{{ s.tick }}</div>
+                        <span style="flex: 1; font-size: 12.5px;">{{ s.label }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 20px;">
+                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000; margin-bottom: 14px;">Campos secundários</div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
+                  <sc-for list="{{ secondary }}" as="f" hint-placeholder-count="3">
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">{{ f.label }}</div>
+                      <div style="border: 1px solid #d8dbdf; border-radius: 6px; padding: 9px 11px; font-size: 12.5px; color: #2F323B; display: flex; justify-content: space-between; align-items: center;">
+                        <span>{{ f.value }}</span>
+                        <span style="color: #A09BA2; font-size: 10px;">▾</span>
+                      </div>
+                      <div style="font-size: 11px; color: #A09BA2;">{{ f.hint }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <div style="position: sticky; top: 0; display: flex; flex-direction: column; gap: 14px;">
+              <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; overflow: hidden;">
+                <div style="background: #2F323B; padding: 14px 18px; display: flex; flex-direction: column; gap: 2px;">
+                  <div style="font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Estimativa</div>
+                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 28px; font-weight: 700; color: #FFFFFF; line-height: 1.1;">{{ estimateLabel }}</div>
+                  <div style="font-size: 11.5px; color: #A09BA2;">estabelecimentos correspondentes</div>
+                </div>
+                <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;">
+                  <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Critérios ativos</div>
+                  <sc-for list="{{ activeCriteria }}" as="c" hint-placeholder-count="4">
+                    <div style="display: flex; gap: 8px; font-size: 12.5px; line-height: 1.45;">
+                      <span style="color: #F15A22; font-weight: 700;">✓</span>
+                      <span style="flex: 1; color: #2F323B;">{{ c }}</span>
+                    </div>
+                  </sc-for>
+                  <div onClick="{{ onBuscar }}" title="Executa a consulta SQL na base local" style="margin-top: 6px; background: #F15A22; color: #FFFFFF; border-radius: 999px; padding: 13px 20px; text-align: center; font-family: 'Neo Sans Pro', sans-serif; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 160ms ease;" style-hover="background: #E75613;" style-active="background: #E8590D;">Buscar na base</div>
+                  <div onClick="{{ onSaveFilter }}" style="border: 1px solid #d8dbdf; color: #2F323B; border-radius: 999px; padding: 11px 20px; text-align: center; font-size: 13px; cursor: pointer;" style-hover="border-color: #F15A22; color: #F15A22;">Salvar segmentação</div>
+                  <div style="font-size: 11px; color: #A09BA2; line-height: 1.5;">A consulta roda localmente sobre 66,4 mi de linhas. Sem índice em CNAE+UF, leva ~40 s.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isResultados }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; height: 100%;">
+            <div style="flex: 0 0 auto; background: #FFFFFF; border-bottom: 1px solid #e3e5e8; padding: 12px 28px; display: flex; align-items: center; gap: 14px;">
+              <div onClick="{{ onToggleAll }}" style="display: flex; align-items: center; gap: 9px; cursor: pointer; font-size: 12.5px; color: #2F323B; font-weight: 600;">
+                <div style="{{ allBox }}">{{ allTick }}</div>
+                <span>Selecionar tudo nesta página</span>
+              </div>
+              <div style="width: 1px; height: 22px; background: #e3e5e8;"></div>
+              <div style="font-size: 12.5px; color: #6c6c6c;">{{ selectionLabel }}</div>
+              <div style="flex: 1;"></div>
+              <div style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: #6c6c6c;">
+                <div style="width: 9px; height: 9px; border-radius: 2px; background: #F15A22;"></div>
+                <span>já é cliente Let's</span>
+              </div>
+              <div onClick="{{ onEnriquecer }}" title="{{ enrichHint }}" style="{{ enrichBtnStyle }}">Enriquecer selecionados</div>
+            </div>
+
+            <div style="flex: 1; min-height: 0; overflow: auto; background: #FFFFFF;">
+              <div style="min-width: 1560px;">
+                <div style="display: grid; grid-template-columns: 38px 250px 170px 132px 150px 210px 96px 92px 78px 150px 168px 96px; position: sticky; top: 0; background: #F5F5F5; border-bottom: 1px solid #d8dbdf; z-index: 2;">
+                  <sc-for list="{{ resultCols }}" as="c" hint-placeholder-count="12">
+                    <div style="padding: 9px 8px; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700; white-space: nowrap; overflow: hidden;">{{ c }}</div>
+                  </sc-for>
+                </div>
+                <sc-for list="{{ resultRows }}" as="r" hint-placeholder-count="12">
+                  <div style="{{ r.rowStyle }}">
+                    <div onClick="{{ r.onToggle }}" style="display: flex; align-items: center; justify-content: center; padding: 0 4px;">
+                      <div style="{{ r.box }}">{{ r.tick }}</div>
+                    </div>
+                    <div onClick="{{ r.onOpen }}" style="padding: 9px 8px; display: flex; align-items: center; gap: 7px; min-width: 0;">
+                      <span style="font-weight: 600; color: #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.razao }}</span>
+                      <span style="{{ r.clientBadge }}">CLIENTE</span>
+                    </div>
+                    <div onClick="{{ r.onOpen }}" style="padding: 9px 8px; color: #6c6c6c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.fantasia }}</div>
+                    <div onClick="{{ r.onOpen }}" style="padding: 9px 8px; font-family: ui-monospace, monospace; font-size: 11.5px; color: #2F323B; white-space: nowrap;">{{ r.cnpj }}</div>
+                    <div onClick="{{ r.onOpen }}" style="padding: 9px 8px; color: #2F323B; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.local }}</div>
+                    <div onClick="{{ r.onOpen }}" style="padding: 9px 8px; color: #6c6c6c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.cnae }}</div>
+                    <div onClick="{{ r.onOpen }}" style="padding: 9px 8px;"><span style="{{ r.sitStyle }}">{{ r.situacao }}</span></div>
+                    <div onClick="{{ r.onOpen }}" style="padding: 9px 8px; color: #6c6c6c; white-space: nowrap;">{{ r.abertura }}</div>
+                    <div onClick="{{ r.onOpen }}" style="padding: 9px 8px; color: #6c6c6c; white-space: nowrap;">{{ r.porte }}</div>
+                    <div onClick="{{ r.onOpen }}" style="padding: 9px 8px; color: #6c6c6c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.natureza }}</div>
+                    <div onClick="{{ r.onOpen }}" style="padding: 9px 8px; color: #6c6c6c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.contato }}</div>
+                    <div onClick="{{ r.onOpen }}" style="padding: 9px 8px; color: #6c6c6c; white-space: nowrap; font-variant-numeric: tabular-nums;">{{ r.capital }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="flex: 0 0 auto; background: #FFFFFF; border-top: 1px solid #e3e5e8; padding: 10px 28px; display: flex; align-items: center; gap: 14px; font-size: 12px; color: #6c6c6c;">
+              <span>Página 1 de 1.294 · 100 linhas por página</span>
+              <div style="flex: 1;"></div>
+              <span style="color: #A09BA2;">Clique em qualquer linha para abrir a ficha completa do CNPJ.</span>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isEnriquecimento }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 24px 28px 32px; display: flex; flex-direction: column; gap: 16px;">
+            <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 20px 22px; display: flex; flex-direction: column; gap: 16px;">
+              <div style="display: flex; align-items: center; gap: 18px;">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+                  <div style="display: flex; align-items: baseline; gap: 10px;">
+                    <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 17px; font-weight: 700; color: #000;">{{ enrichHeadline }}</div>
+                    <div style="font-size: 12px; color: #A09BA2;">{{ enrichSub }}</div>
+                  </div>
+                  <div style="height: 12px; background: #eef0f2; border-radius: 999px; overflow: hidden;">
+                    <div style="{{ enrichBarStyle }}"></div>
+                  </div>
+                  <div style="display: flex; gap: 18px; font-size: 12px; color: #6c6c6c;">
+                    <span>{{ enrichDoneLabel }}</span>
+                    <span>{{ enrichEtaLabel }}</span>
+                    <span>Rate limit: 3 req/s (BrasilAPI)</span>
+                  </div>
+                </div>
+                <div onClick="{{ onTogglePause }}" style="{{ pauseBtnStyle }}">{{ pauseLabel }}</div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                <sc-for list="{{ confidenceCards }}" as="c" hint-placeholder-count="3">
+                  <div style="{{ c.style }}">
+                    <div style="display: flex; align-items: center; gap: 9px;">
+                      <div style="{{ c.dot }}"></div>
+                      <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13px; font-weight: 700; color: #000;">{{ c.title }}</div>
+                      <div style="flex: 1;"></div>
+                      <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 20px; font-weight: 700; color: #000;">{{ c.count }}</div>
+                    </div>
+                    <div style="font-size: 11.5px; color: #6c6c6c; line-height: 1.45;">{{ c.desc }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 30px 260px 140px 200px 190px 1fr; background: #F5F5F5; border-bottom: 1px solid #d8dbdf;">
+                <sc-for list="{{ enrichCols }}" as="c" hint-placeholder-count="6">
+                  <div style="padding: 9px 10px; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700;">{{ c }}</div>
+                </sc-for>
+              </div>
+              <div style="max-height: 340px; overflow: auto;">
+                <sc-for list="{{ enrichRows }}" as="r" hint-placeholder-count="8">
+                  <div style="display: grid; grid-template-columns: 30px 260px 140px 200px 190px 1fr; border-bottom: 1px solid #f0f1f3; font-size: 12.5px; align-items: center;">
+                    <div style="display: flex; justify-content: center;"><div style="{{ r.dot }}"></div></div>
+                    <div style="padding: 9px 10px; color: #000; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.razao }}</div>
+                    <div style="padding: 9px 10px; font-family: ui-monospace, monospace; font-size: 11.5px; color: #2F323B;">{{ r.cnpjShort }}</div>
+                    <div style="padding: 9px 10px; color: #2F323B;">{{ r.telefone }}</div>
+                    <div style="padding: 9px 10px; color: #2F323B; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.email }}</div>
+                    <div style="padding: 9px 10px; color: #6c6c6c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.note }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="background: #2F323B; border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13px; font-weight: 700; color: #FFFFFF;">Log de erros por CNPJ</div>
+                <div style="font-size: 11px; color: #A09BA2;">{{ logCountLabel }}</div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 5px; font-family: ui-monospace, monospace; font-size: 11.5px; color: #cfd2d6; max-height: 96px; overflow: auto;">
+                <sc-for list="{{ errorLog }}" as="l" hint-placeholder-count="3">
+                  <div style="display: flex; gap: 10px;">
+                    <span style="color: #6f7178;">{{ l.time }}</span>
+                    <span style="color: #F15A22;">{{ l.cnpj }}</span>
+                    <span style="flex: 1;">{{ l.msg }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isLista }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 24px 28px 32px; display: grid; grid-template-columns: 1fr 316px; gap: 18px; align-items: start;">
+            <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; overflow: hidden;">
+              <div style="padding: 14px 18px; border-bottom: 1px solid #e3e5e8; display: flex; align-items: center; gap: 12px;">
+                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000;">{{ listaTitle }}</div>
+                <div style="flex: 1;"></div>
+                <sc-for list="{{ listaFilters }}" as="f" hint-placeholder-count="3">
+                  <div onClick="{{ f.onClick }}" style="{{ f.style }}">{{ f.label }}</div>
+                </sc-for>
+              </div>
+              <div style="display: grid; grid-template-columns: 26px 240px 132px 138px 168px 150px 90px; background: #F5F5F5; border-bottom: 1px solid #d8dbdf;">
+                <sc-for list="{{ finalCols }}" as="c" hint-placeholder-count="7">
+                  <div style="padding: 9px 8px; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700;">{{ c }}</div>
+                </sc-for>
+              </div>
+              <div style="max-height: 520px; overflow: auto;">
+                <sc-for list="{{ finalRows }}" as="r" hint-placeholder-count="10">
+                  <div style="{{ r.rowStyle }}">
+                    <div style="display: flex; justify-content: center; align-items: center;"><div style="{{ r.dot }}"></div></div>
+                    <div style="padding: 9px 8px; display: flex; align-items: center; gap: 7px; min-width: 0;">
+                      <span style="font-weight: 600; color: #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.razao }}</span>
+                      <span style="{{ r.clientBadge }}">CLIENTE</span>
+                    </div>
+                    <div style="padding: 9px 8px; font-family: ui-monospace, monospace; font-size: 11.5px; color: #2F323B;">{{ r.cnpjShort }}</div>
+                    <div style="padding: 9px 8px; color: #2F323B;">{{ r.telefone }}</div>
+                    <div style="padding: 9px 8px; color: #2F323B; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.email }}</div>
+                    <div style="padding: 9px 8px; color: #6c6c6c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.local }}</div>
+                    <div style="padding: 9px 8px; color: #6c6c6c;">{{ r.confLabel }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000;">Exportar</div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Colunas incluídas</div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <sc-for list="{{ exportCols }}" as="c" hint-placeholder-count="8">
+                      <div onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</div>
+                    </sc-for>
+                  </div>
+                  <div style="font-size: 11px; color: #A09BA2; line-height: 1.5;">Clique para incluir ou remover a coluna do arquivo gerado.</div>
+                </div>
+                <div style="height: 1px; background: #eef0f2;"></div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Formato</div>
+                  <div style="display: flex; gap: 8px;">
+                    <sc-for list="{{ formats }}" as="f" hint-placeholder-count="2">
+                      <div onClick="{{ f.onClick }}" style="{{ f.style }}">{{ f.label }}</div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div onClick="{{ onExport }}" style="background: #F15A22; color: #FFFFFF; border-radius: 999px; padding: 13px 20px; text-align: center; font-family: 'Neo Sans Pro', sans-serif; font-weight: 700; font-size: 14px; cursor: pointer;" style-hover="background: #E75613;">{{ exportLabel }}</div>
+                <div style="font-size: 11.5px; color: #6c6c6c; line-height: 1.5;">{{ exportNote }}</div>
+              </div>
+
+              <div style="background: #FFFFFF; border: 3px solid #F15A22; border-radius: 0 70px 0 70px; padding: 24px 26px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000; line-height: 1.25;">Antes de exportar</div>
+                <div style="font-size: 12.5px; color: #2F323B; line-height: 1.5;">Linhas <strong>vermelhas</strong> não têm contato confirmado — exportá-las gera retrabalho para o time comercial. Linhas marcadas <strong>CLIENTE</strong> já pertencem à carteira Let's.</div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isMercado }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 20px 28px 32px; display: grid; grid-template-columns: 296px 1fr; gap: 18px; align-items: start;">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14px; font-weight: 700; color: #000;">Visualização</div>
+                <div style="display: flex; gap: 8px;">
+                  <sc-for list="{{ mapModes }}" as="m" hint-placeholder-count="2">
+                    <div onClick="{{ m.onClick }}" style="{{ m.style }}">{{ m.label }}</div>
+                  </sc-for>
+                </div>
+                <div style="font-size: 11.5px; color: #6c6c6c; line-height: 1.5;">{{ mapModeHelp }}</div>
+                <div style="height: 1px; background: #eef0f2;"></div>
+                <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Métrica</div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <sc-for list="{{ mapMetrics }}" as="m" hint-placeholder-count="3">
+                    <div onClick="{{ m.onClick }}" style="{{ m.style }}">{{ m.label }}</div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14px; font-weight: 700; color: #000;">Recorte aplicado</div>
+                <sc-for list="{{ mapCriteria }}" as="c" hint-placeholder-count="4">
+                  <div style="display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; border-bottom: 1px dashed #e8eaec; padding-bottom: 7px;">
+                    <span style="color: #6c6c6c;">{{ c.label }}</span>
+                    <span style="color: #000; font-weight: 600; text-align: right; max-width: 150px;">{{ c.value }}</span>
+                  </div>
+                </sc-for>
+                <div onClick="{{ onGoFiltro }}" style="border: 1px solid #d8dbdf; border-radius: 999px; padding: 10px 18px; text-align: center; font-size: 12.5px; color: #2F323B; cursor: pointer;" style-hover="border-color: #F15A22; color: #F15A22;">Editar filtros</div>
+              </div>
+
+              <div style="background: #2F323B; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14px; font-weight: 700; color: #FFFFFF;">Concentração por UF</div>
+                <sc-for list="{{ mapRanking }}" as="r" hint-placeholder-count="6">
+                  <div style="display: grid; grid-template-columns: 30px 1fr 66px; align-items: center; gap: 10px;">
+                    <span style="font-family: 'Neo Sans Pro', sans-serif; font-size: 12.5px; font-weight: 700; color: #FFFFFF;">{{ r.uf }}</span>
+                    <div style="height: 7px; background: rgba(255,255,255,.12); border-radius: 999px; overflow: hidden;">
+                      <div style="{{ r.barStyle }}"></div>
+                    </div>
+                    <span style="font-size: 11.5px; color: #cfd2d6; text-align: right; font-variant-numeric: tabular-nums;">{{ r.count }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 18px 18px 12px; display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; align-items: baseline; gap: 12px;">
+                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 16px; font-weight: 700; color: #000;">{{ mapTitle }}</div>
+                <div style="flex: 1;"></div>
+                <div style="font-size: 11.5px; color: #A09BA2;">{{ mapTotalLabel }}</div>
+              </div>
+              <div ref="{{ mapRef }}" style="width: 100%; height: 528px; background: #F5F5F5; border-radius: 6px; position: relative; overflow: hidden;"></div>
+              <div style="display: flex; align-items: center; gap: 14px; padding: 2px 2px 6px;">
+                <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Densidade</div>
+                <div style="flex: 0 0 220px; height: 9px; border-radius: 999px; background: linear-gradient(90deg, #ffe3d6, #F15A22 55%, #8f2c08);"></div>
+                <div style="font-size: 11.5px; color: #6c6c6c;">menor · maior</div>
+                <div style="flex: 1;"></div>
+                <div style="font-size: 11px; color: #A09BA2;">Geometria: Natural Earth · agregação por UF do estabelecimento</div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+
+      <sc-if value="{{ drawerOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; inset: 0; z-index: 20; display: flex; justify-content: flex-end;">
+          <div onClick="{{ onCloseDrawer }}" style="position: absolute; inset: 0; background: rgba(17,15,12,.42);"></div>
+          <div style="position: relative; width: 640px; height: 100%; background: #FFFFFF; box-shadow: -20px 0 60px rgba(0,0,0,.25); display: flex; flex-direction: column;">
+            <div style="flex: 0 0 auto; background: #2F323B; padding: 20px 24px 18px; display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; align-items: flex-start; gap: 14px;">
+                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #F15A22; font-weight: 700;">Ficha do CNPJ</span>
+                    <span style="{{ drawerClientBadge }}">CLIENTE LET'S</span>
+                  </div>
+                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 21px; font-weight: 700; color: #FFFFFF; line-height: 1.2;">{{ drawerRazao }}</div>
+                  <div style="font-family: ui-monospace, monospace; font-size: 12.5px; color: #cfd2d6;">{{ drawerCnpj }}</div>
+                </div>
+                <div onClick="{{ onCloseDrawer }}" style="width: 30px; height: 30px; border-radius: 6px; background: rgba(255,255,255,.1); color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px;" style-hover="background: rgba(255,255,255,.2);">✕</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(255,255,255,.06); border-radius: 6px;">
+                <div style="{{ drawerConfDot }}"></div>
+                <div style="flex: 1; font-size: 12px; color: #FFFFFF;">{{ drawerConfLabel }}</div>
+                <div style="font-size: 11.5px; color: #A09BA2;">{{ drawerConfSource }}</div>
+              </div>
+            </div>
+
+            <div style="flex: 1; min-height: 0; overflow: auto; padding: 20px 24px 28px; display: flex; flex-direction: column; gap: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Dados cadastrais</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px;">
+                  <sc-for list="{{ drawerFields }}" as="f" hint-placeholder-count="10">
+                    <div style="display: flex; flex-direction: column;">
+                      <div style="font-size: 11px; color: #A09BA2; margin-bottom: 2px;">{{ f.label }}</div>
+                      <div style="font-size: 12.5px; color: #000; font-weight: 600; line-height: 1.4;">{{ f.value }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Quadro de sócios</div>
+                <sc-for list="{{ drawerSocios }}" as="s" hint-placeholder-count="2">
+                  <div style="border: 1px solid #e3e5e8; border-radius: 6px; padding: 12px 14px; display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 32px; height: 32px; border-radius: 999px; background: #F5F5F5; display: flex; align-items: center; justify-content: center; font-family: 'Neo Sans Pro', sans-serif; font-size: 12px; font-weight: 700; color: #F15A22;">{{ s.initials }}</div>
+                    <div style="flex: 1; min-width: 0;">
+                      <div style="font-size: 12.5px; font-weight: 600; color: #000;">{{ s.nome }}</div>
+                      <div style="font-size: 11.5px; color: #6c6c6c;">{{ s.qual }}</div>
+                    </div>
+                    <div style="font-size: 11.5px; color: #A09BA2;">{{ s.entrada }}</div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Histórico de enriquecimento</div>
+                <sc-for list="{{ drawerHistory }}" as="h" hint-placeholder-count="3">
+                  <div style="display: flex; gap: 12px; align-items: flex-start; border-left: 2px solid #eef0f2; padding: 0 0 12px 14px; position: relative;">
+                    <div style="{{ h.dot }}"></div>
+                    <div style="flex: 1;">
+                      <div style="font-size: 12.5px; color: #000; font-weight: 600;">{{ h.title }}</div>
+                      <div style="font-size: 11.5px; color: #6c6c6c; line-height: 1.5;">{{ h.detail }}</div>
+                    </div>
+                    <div style="font-size: 11px; color: #A09BA2; white-space: nowrap;">{{ h.date }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="flex: 0 0 auto; border-top: 1px solid #e3e5e8; padding: 14px 24px; display: flex; gap: 10px; align-items: center;">
+              <div onClick="{{ onDrawerEnrich }}" style="background: #F15A22; color: #FFFFFF; border-radius: 999px; padding: 11px 22px; font-family: 'Neo Sans Pro', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer;" style-hover="background: #E75613;">Enriquecer este CNPJ</div>
+              <div style="border: 1px solid #d8dbdf; border-radius: 999px; padding: 10px 20px; font-size: 12.5px; color: #2F323B; cursor: pointer;" style-hover="border-color: #F15A22; color: #F15A22;">Adicionar à lista</div>
+              <div style="flex: 1;"></div>
+              <div style="font-size: 11.5px; color: #A09BA2;">Dados públicos — CNPJ · Receita Federal</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1496,&quot;height&quot;:968}}">
+const ORANGE = '#F15A22';
+const DARK = '#2F323B';
+
+const COMPANIES = [
+  { id: 1, razao: 'TRANSPORTADORA ROTA SUL LTDA', fantasia: 'Rota Sul Log', cnpj: '11.432.908/0001-45', uf: 'RS', mun: 'Canoas', cnae: '4930-2/02 Transporte rodoviário de carga', sit: 'Ativa', abertura: '12/03/2009', porte: 'Média', natureza: 'Sociedade Empresária Ltda', tel: '(51) 3441-2200', email: 'contato@rotasul.com.br', capital: 'R$ 2,4 mi', cliente: false, conf: 'g' },
+  { id: 2, razao: 'AGROVALE DISTRIBUIDORA S.A.', fantasia: 'Agrovale', cnpj: '08.771.220/0001-10', uf: 'GO', mun: 'Rio Verde', cnae: '4632-0/01 Comércio atacadista de cereais', sit: 'Ativa', abertura: '04/08/2006', porte: 'Grande', natureza: 'Sociedade Anônima Fechada', tel: '(64) 3611-8080', email: 'compras@agrovale.com.br', capital: 'R$ 18,0 mi', cliente: true, conf: 'g' },
+  { id: 3, razao: 'CONSTRUTORA MARANDU EIRELI', fantasia: 'Marandu Obras', cnpj: '19.005.664/0001-72', uf: 'MG', mun: 'Uberlândia', cnae: '4120-4/00 Construção de edifícios', sit: 'Ativa', abertura: '27/11/2013', porte: 'Média', natureza: 'Empresa Individual', tel: '(34) 3212-4477', email: '—', capital: 'R$ 1,1 mi', cliente: false, conf: 'y' },
+  { id: 4, razao: 'FARMÁCIAS VIDA PLENA LTDA', fantasia: 'Vida Plena', cnpj: '22.914.087/0001-03', uf: 'SP', mun: 'Campinas', cnae: '4771-7/01 Comércio varejista de medicamentos', sit: 'Ativa', abertura: '15/06/2015', porte: 'Média', natureza: 'Sociedade Empresária Ltda', tel: '(19) 3255-9010', email: 'adm@vidaplena.com.br', capital: 'R$ 900 mil', cliente: false, conf: 'g' },
+  { id: 5, razao: 'MINERAÇÃO SERRA ALTA S.A.', fantasia: 'Serra Alta', cnpj: '05.338.412/0001-96', uf: 'MG', mun: 'Nova Lima', cnae: '0710-3/01 Extração de minério de ferro', sit: 'Ativa', abertura: '30/01/2003', porte: 'Grande', natureza: 'Sociedade Anônima Fechada', tel: '(31) 3288-7000', email: 'suprimentos@serraalta.com', capital: 'R$ 140,0 mi', cliente: true, conf: 'g' },
+  { id: 6, razao: 'LOGÍSTICA PORTO NORTE LTDA', fantasia: 'Porto Norte', cnpj: '13.660.775/0001-28', uf: 'PA', mun: 'Belém', cnae: '5211-7/99 Depósitos de mercadorias', sit: 'Ativa', abertura: '09/09/2011', porte: 'Média', natureza: 'Sociedade Empresária Ltda', tel: '(91) 3084-1122', email: 'operacoes@portonorte.com.br', capital: 'R$ 3,2 mi', cliente: false, conf: 'y' },
+  { id: 7, razao: 'USINA CANAVIAL DO OESTE LTDA', fantasia: 'Canavial Oeste', cnpj: '02.117.539/0001-64', uf: 'MS', mun: 'Dourados', cnae: '1071-6/00 Fabricação de açúcar', sit: 'Ativa', abertura: '18/05/1998', porte: 'Grande', natureza: 'Sociedade Empresária Ltda', tel: '(67) 3422-5500', email: 'frota@canavialoeste.com.br', capital: 'R$ 96,5 mi', cliente: false, conf: 'g' },
+  { id: 8, razao: 'CLÍNICA SAÚDE INTEGRADA LTDA', fantasia: 'Saúde Integrada', cnpj: '26.884.310/0001-51', uf: 'PR', mun: 'Londrina', cnae: '8630-5/03 Atividade médica ambulatorial', sit: 'Ativa', abertura: '22/02/2017', porte: 'Pequena', natureza: 'Sociedade Simples Ltda', tel: '(43) 3325-6070', email: 'contato@saudeintegrada.com', capital: 'R$ 450 mil', cliente: false, conf: 'r' },
+  { id: 9, razao: 'DISTRIBUIDORA BEBIDAS LITORAL S.A.', fantasia: 'Litoral Bebidas', cnpj: '07.442.116/0001-39', uf: 'ES', mun: 'Serra', cnae: '4635-4/02 Atacadista de cerveja e refrigerante', sit: 'Ativa', abertura: '11/07/2005', porte: 'Grande', natureza: 'Sociedade Anônima Fechada', tel: '(27) 3348-9900', email: 'logistica@litoralbebidas.com.br', capital: 'R$ 42,0 mi', cliente: true, conf: 'g' },
+  { id: 10, razao: 'FRIGORÍFICO CAMPO BOM LTDA', fantasia: 'Campo Bom', cnpj: '16.288.940/0001-17', uf: 'SC', mun: 'Chapecó', cnae: '1011-2/01 Abate de bovinos', sit: 'Ativa', abertura: '03/04/2012', porte: 'Grande', natureza: 'Sociedade Empresária Ltda', tel: '(49) 3319-4040', email: '—', capital: 'R$ 61,8 mi', cliente: false, conf: 'r' },
+  { id: 11, razao: 'TELECOM FIBRA NORDESTE LTDA', fantasia: 'Fibra NE', cnpj: '24.775.302/0001-88', uf: 'PE', mun: 'Recife', cnae: '6110-8/03 Provedor de acesso às redes', sit: 'Ativa', abertura: '30/06/2016', porte: 'Média', natureza: 'Sociedade Empresária Ltda', tel: '(81) 3070-2210', email: 'compras@fibrane.com.br', capital: 'R$ 5,7 mi', cliente: false, conf: 'g' },
+  { id: 12, razao: 'ENGENHARIA AMBIENTAL CERRADO LTDA', fantasia: 'Cerrado Ambiental', cnpj: '18.550.671/0001-24', uf: 'DF', mun: 'Brasília', cnae: '3900-5/00 Descontaminação e gestão de resíduos', sit: 'Ativa', abertura: '14/10/2013', porte: 'Média', natureza: 'Sociedade Empresária Ltda', tel: '(61) 3344-1188', email: 'frota@cerradoambiental.com.br', capital: 'R$ 2,9 mi', cliente: false, conf: 'y' },
+  { id: 13, razao: 'ATACADO NOVA BAHIA LTDA', fantasia: 'Nova Bahia', cnpj: '09.611.884/0001-70', uf: 'BA', mun: 'Feira de Santana', cnae: '4691-5/00 Atacadista de mercadorias em geral', sit: 'Suspensa', abertura: '25/05/2008', porte: 'Média', natureza: 'Sociedade Empresária Ltda', tel: '(75) 3221-7788', email: 'nova.bahia@atacado.com', capital: 'R$ 4,4 mi', cliente: false, conf: 'r' },
+  { id: 14, razao: 'SERVIÇOS INDUSTRIAIS PAULISTA LTDA', fantasia: 'SIP Industrial', cnpj: '21.079.443/0001-11', uf: 'SP', mun: 'São Bernardo do Campo', cnae: '3314-7/99 Manutenção de máquinas industriais', sit: 'Ativa', abertura: '07/01/2015', porte: 'Média', natureza: 'Sociedade Empresária Ltda', tel: '(11) 4127-3300', email: 'manutencao@sipind.com.br', capital: 'R$ 3,6 mi', cliente: false, conf: 'g' },
+  { id: 15, razao: 'COOPERATIVA AGRÍCOLA VALE VERDE', fantasia: 'Vale Verde', cnpj: '04.228.117/0001-05', uf: 'RS', mun: 'Passo Fundo', cnae: '0111-3/02 Cultivo de milho', sit: 'Ativa', abertura: '19/08/2001', porte: 'Grande', natureza: 'Cooperativa', tel: '(54) 3316-9090', email: 'frota@valeverde.coop.br', capital: 'R$ 55,2 mi', cliente: true, conf: 'g' },
+  { id: 16, razao: 'ENERGIA SOLAR TROPICAL LTDA', fantasia: 'Solar Tropical', cnpj: '31.884.605/0001-42', uf: 'CE', mun: 'Fortaleza', cnae: '4321-5/00 Instalação elétrica', sit: 'Ativa', abertura: '05/12/2018', porte: 'Pequena', natureza: 'Sociedade Empresária Ltda', tel: '(85) 3261-4455', email: 'obras@solartropical.com.br', capital: 'R$ 780 mil', cliente: false, conf: 'y' }
+];
+
+const SOCIOS = {
+  1: [{ nome: 'Marcelo Antunes Ferraz', qual: 'Sócio-administrador · 60%', entrada: 'desde 2009' }, { nome: 'Helena Ferraz Duarte', qual: 'Sócia · 40%', entrada: 'desde 2014' }],
+  default: [{ nome: 'Ricardo Salles Moreira', qual: 'Sócio-administrador · 70%', entrada: 'desde 2006' }, { nome: 'Beatriz Nogueira Lima', qual: 'Sócia · 30%', entrada: 'desde 2011' }]
+};
+
+const UF_GEO = { AC: [-67.81, -9.97, 32100], AL: [-35.70, -9.65, 61400], AP: [-51.06, 0.03, 21800], AM: [-60.02, -3.10, 96500], BA: [-38.50, -12.97, 412800], CE: [-38.52, -3.73, 268300], DF: [-47.88, -15.79, 196400], ES: [-40.34, -20.32, 178900], GO: [-49.25, -16.68, 314600], MA: [-44.30, -2.53, 118700], MT: [-56.10, -15.60, 189400], MS: [-54.65, -20.44, 132200], MG: [-43.94, -19.92, 921500], PA: [-48.50, -1.46, 176800], PB: [-34.88, -7.12, 92300], PR: [-49.27, -25.43, 604700], PE: [-34.88, -8.05, 261500], PI: [-42.80, -5.09, 71600], RJ: [-43.17, -22.91, 741200], RN: [-35.21, -5.79, 88400], RS: [-51.23, -30.03, 673900], RO: [-63.90, -8.76, 61200], RR: [-60.67, 2.82, 17400], SC: [-48.55, -27.59, 486300], SP: [-46.63, -23.55, 2184000], SE: [-37.07, -10.91, 58900], TO: [-48.33, -10.18, 54700] };
+
+const ALL_UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+
+const CNAES = [
+  { code: '4930-2', desc: 'Transporte rodoviário de carga', count: '412.880' },
+  { code: '4923-0', desc: 'Transporte rodoviário de táxi e fretamento', count: '188.402' },
+  { code: '1071-6', desc: 'Fabricação de açúcar em bruto', count: '1.204' },
+  { code: '0710-3', desc: 'Extração de minério de ferro', count: '866' },
+  { code: '3900-5', desc: 'Descontaminação e gestão de resíduos', count: '9.331' },
+  { code: '4632-0', desc: 'Comércio atacadista de cereais', count: '27.418' },
+  { code: '8630-5', desc: 'Atividade médica ambulatorial', count: '204.771' },
+  { code: '6110-8', desc: 'Provedor de acesso às redes de comunicação', count: '18.965' }
+];
+
+const CONF = {
+  g: { color: '#21a35a', label: 'Confirmado por fonte oficial atualizada' },
+  y: { color: '#e8a33d', label: 'Parcialmente confirmado — dado desatualizado' },
+  r: { color: '#d64545', label: 'Não encontrado ou conflitante — não preenchido' }
+};
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.mapRef = React.createRef();
+    this.state = {
+      screen: 'dashboard',
+      ufs: ['SP', 'MG', 'RS', 'PR'],
+      cnaeQuery: '',
+      cnaes: ['4930-2', '4632-0'],
+      sits: ['Ativa'],
+      portes: ['Média', 'Grande'],
+      selected: [1, 3, 4, 6, 8, 10, 12, 16],
+      drawerId: null,
+      enrichProgress: 0,
+      enrichRunning: false,
+      enrichDone: false,
+      mapMode: 'calor',
+      mapMetric: 'total',
+      exportCols: ['Razão social', 'CNPJ', 'Telefone', 'E-mail', 'UF/Município', 'CNAE', 'Confiança', 'Cliente'],
+      format: 'xlsx',
+      listaFilter: 'todos',
+      savedActive: 'Frotas reguladas — Sul'
+    };
+  }
+
+  componentDidMount() { this.tryDrawMap(); }
+  componentDidUpdate(p, s) {
+    if (this.state.screen === 'mercado') this.tryDrawMap();
+    if (s.enrichRunning !== this.state.enrichRunning) this.tick();
+  }
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._m); }
+
+  tick() {
+    clearTimeout(this._t);
+    if (!this.state.enrichRunning) return;
+    this._t = setTimeout(() => {
+      const p = Math.min(100, this.state.enrichProgress + 4);
+      const done = p >= 100;
+      this.setState({ enrichProgress: p, enrichRunning: !done, enrichDone: done }, () => { if (!done) this.tick(); });
+    }, 220);
+  }
+
+  tryDrawMap() {
+    const el = this.mapRef.current;
+    if (!el) return;
+    if (!window.d3 || !window.topojson) { clearTimeout(this._m); this._m = setTimeout(() => this.tryDrawMap(), 200); return; }
+    const key = this.state.mapMode + '|' + this.state.mapMetric + '|' + el.clientWidth;
+    if (el.dataset.key === key) return;
+    el.dataset.key = key;
+    if (this._geo) return this.paintMap(el);
+    d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(topo => {
+      const feats = topojson.feature(topo, topo.objects.countries).features;
+      this._geo = feats.filter(f => ['076', '600', '858', '032', '068', '170', '604', '218', '862', '328', '740'].indexOf(f.id) >= 0);
+      this._br = feats.filter(f => f.id === '076');
+      this.paintMap(el);
+    });
+  }
+
+  metricValue(uf) {
+    const base = UF_GEO[uf][2];
+    if (this.state.mapMetric === 'grande') return Math.round(base * 0.06);
+    if (this.state.mapMetric === 'clientes') return Math.round(base * 0.011);
+    return base;
+  }
+
+  paintMap(el) {
+    const w = el.clientWidth || 900, h = el.clientHeight || 528;
+    el.innerHTML = '';
+    const svg = d3.select(el).append('svg').attr('width', w).attr('height', h).style('display', 'block');
+    const proj = d3.geoMercator().fitExtent([[26, 18], [w - 26, h - 18]], { type: 'FeatureCollection', features: this._br });
+    const path = d3.geoPath(proj);
+    svg.append('g').selectAll('path').data(this._geo).join('path').attr('d', path)
+      .attr('fill', d => d.id === '076' ? '#e7e9ec' : '#f0f1f3')
+      .attr('stroke', d => d.id === '076' ? '#c3c7cc' : '#e4e6e9').attr('stroke-width', d => d.id === '076' ? 1.2 : .8);
+
+    const vals = ALL_UFS.map(u => this.metricValue(u));
+    const max = d3.max(vals);
+    const heat = this.state.mapMode === 'calor';
+
+    if (heat) {
+      const defs = svg.append('defs');
+      const grad = defs.append('radialGradient').attr('id', 'lets-heat');
+      grad.append('stop').attr('offset', '0%').attr('stop-color', ORANGE).attr('stop-opacity', .9);
+      grad.append('stop').attr('offset', '55%').attr('stop-color', ORANGE).attr('stop-opacity', .35);
+      grad.append('stop').attr('offset', '100%').attr('stop-color', ORANGE).attr('stop-opacity', 0);
+      const blur = defs.append('filter').attr('id', 'lets-blur').attr('x', '-60%').attr('y', '-60%').attr('width', '220%').attr('height', '220%');
+      blur.append('feGaussianBlur').attr('stdDeviation', 10);
+      const rs = d3.scaleSqrt().domain([0, max]).range([10, 78]);
+      svg.append('g').attr('filter', 'url(#lets-blur)').selectAll('circle').data(ALL_UFS).join('circle')
+        .attr('cx', u => proj([UF_GEO[u][0], UF_GEO[u][1]])[0])
+        .attr('cy', u => proj([UF_GEO[u][0], UF_GEO[u][1]])[1])
+        .attr('r', u => rs(this.metricValue(u))).attr('fill', 'url(#lets-heat)');
+    }
+
+    const rs2 = d3.scaleSqrt().domain([0, max]).range([3, heat ? 7 : 30]);
+    const col = d3.scaleSequential().domain([0, max]).interpolator(d3.interpolateRgb('#ffb695', '#8f2c08'));
+    const g = svg.append('g');
+    g.selectAll('circle').data(ALL_UFS).join('circle')
+      .attr('cx', u => proj([UF_GEO[u][0], UF_GEO[u][1]])[0])
+      .attr('cy', u => proj([UF_GEO[u][0], UF_GEO[u][1]])[1])
+      .attr('r', u => rs2(this.metricValue(u)))
+      .attr('fill', u => heat ? '#7d2506' : col(this.metricValue(u)))
+      .attr('fill-opacity', heat ? 1 : .82)
+      .attr('stroke', '#fff').attr('stroke-width', heat ? 1 : 1.4)
+      .append('title').text(u => u + ' · ' + this.metricValue(u).toLocaleString('pt-BR') + ' empresas');
+
+    const top = ALL_UFS.slice().sort((a, b) => this.metricValue(b) - this.metricValue(a)).slice(0, 7);
+    svg.append('g').selectAll('text').data(top).join('text')
+      .attr('x', u => proj([UF_GEO[u][0], UF_GEO[u][1]])[0])
+      .attr('y', u => proj([UF_GEO[u][0], UF_GEO[u][1]])[1] - (heat ? 12 : rs2(this.metricValue(u)) + 7))
+      .attr('text-anchor', 'middle').attr('font-family', "'Neo Sans Pro', sans-serif")
+      .attr('font-size', 12).attr('font-weight', 700).attr('fill', '#2F323B').text(u => u);
+  }
+
+  go(screen) { this.setState({ screen, drawerId: null }); }
+  toggle(key, v) {
+    const arr = this.state[key].slice();
+    const i = arr.indexOf(v);
+    if (i >= 0) arr.splice(i, 1); else arr.push(v);
+    this.setState({ [key]: arr });
+  }
+
+  chip(active, extra) {
+    return 'display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 13px; border-radius: 999px; font-size: 12.5px; cursor: pointer; user-select: none; transition: all 160ms ease; ' +
+      (active ? 'background: ' + ORANGE + '; color: #fff; font-weight: 600; border: 1px solid ' + ORANGE + ';' : 'background: #fff; color: #2F323B; border: 1px solid #d8dbdf;') + (extra || '');
+  }
+  box(active) {
+    return 'width: 16px; height: 16px; flex: 0 0 16px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; ' +
+      (active ? 'background: ' + ORANGE + '; border: 1px solid ' + ORANGE + ';' : 'background: #fff; border: 1.5px solid #c8ccd1;');
+  }
+  dot(c, size) {
+    const s = size || 10;
+    return 'width: ' + s + 'px; height: ' + s + 'px; flex: 0 0 ' + s + 'px; border-radius: 999px; background: ' + c + '; box-shadow: 0 0 0 2px rgba(0,0,0,.05);';
+  }
+
+  renderVals() {
+    const st = this.state;
+    const enrichPool = COMPANIES.filter(c => st.selected.indexOf(c.id) >= 0);
+    const shown = Math.round(enrichPool.length * st.enrichProgress / 100);
+    const processed = enrichPool.slice(0, shown);
+
+    const navDefs = [
+      ['dashboard', 'Dashboard', '', 'Visão geral da base local'],
+      ['filtro', 'Filtro', '', 'Definir critérios de segmentação'],
+      ['resultados', 'Resultados', String(st.selected.length), 'Empresas que batem com o filtro'],
+      ['enriquecimento', 'Enriquecimento', st.enrichRunning ? '•' : '', 'Validação via BrasilAPI / ReceitaWS'],
+      ['lista', 'Lista final', '', 'Consolidado pronto para exportar'],
+      ['mercado', 'Inteligência de mercado', '', 'Mapa de densidade por região']
+    ];
+
+    const nav = navDefs.map(([id, label, badge, hint]) => {
+      const on = st.screen === id;
+      return {
+        label, badge, hint, onClick: () => this.go(id),
+        style: 'display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 160ms ease; ' +
+          (on ? 'background: rgba(241,90,34,.16); color: #fff; font-weight: 600;' : 'color: #c9cbd0;'),
+        marker: 'width: 3px; height: 16px; border-radius: 999px; background: ' + (on ? ORANGE : 'transparent') + ';',
+        badgeStyle: badge ? 'font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: ' + ORANGE + '; color: #fff;' : 'display: none;'
+      };
+    });
+
+    const titles = {
+      dashboard: ['Base local', 'Panorama da base da Receita Federal', 'Snapshot do arquivo SQLite carregado no disco deste computador. Nenhum dado sai da máquina.'],
+      filtro: ['Segmentação', 'Definir critérios de busca', 'Combine UF, CNAE, situação e porte. A estimativa à direita é recalculada conforme você ajusta os critérios.'],
+      resultados: ['Resultado da consulta', '129.402 estabelecimentos encontrados', 'Selecione as empresas que vão para o enriquecimento. Clique na linha (fora do checkbox) para abrir a ficha completa.'],
+      enriquecimento: ['Processamento', 'Enriquecimento dos selecionados', 'Cada CNPJ é consultado em fonte externa e classificado por nível de confiança. Dados não confirmados ficam em branco — nunca são supostos.'],
+      lista: ['Entrega', 'Lista final de prospecção', 'Revise o semáforo de confiança e a marcação de cliente antes de exportar para o time comercial.'],
+      mercado: ['Inteligência de mercado', 'Mapa de densidade de empresas', 'Aplique qualquer recorte e veja onde o mercado está concentrado. Útil para escolher praças antes de montar a lista.']
+    }[st.screen];
+
+    const headerActions = {
+      dashboard: [{ label: 'Recarregar base', hint: 'Relê o arquivo .sqlite do disco' }, { label: 'Nova segmentação', hint: 'Abrir a tela de filtro', primary: true, onClick: () => this.go('filtro') }],
+      filtro: [{ label: 'Limpar critérios', onClick: () => this.setState({ ufs: [], cnaes: [], sits: [], portes: [] }) }],
+      resultados: [{ label: 'Exportar bruto', hint: 'CSV sem enriquecimento' }],
+      enriquecimento: st.enrichDone ? [{ label: 'Ver lista final', primary: true, onClick: () => this.go('lista') }] : [],
+      lista: [{ label: 'Voltar aos resultados', onClick: () => this.go('resultados') }],
+      mercado: [{ label: 'Usar recorte no filtro', primary: true, onClick: () => this.go('filtro') }]
+    }[st.screen] || [];
+
+    const resultRows = COMPANIES.map(c => {
+      const on = st.selected.indexOf(c.id) >= 0;
+      return {
+        razao: c.razao, fantasia: c.fantasia, cnpj: c.cnpj, local: c.uf + ' · ' + c.mun, cnae: c.cnae,
+        situacao: c.sit, abertura: c.abertura, porte: c.porte, natureza: c.natureza, contato: c.tel + ' · ' + c.email, capital: c.capital,
+        onToggle: (e) => { e.stopPropagation(); this.toggle('selected', c.id); },
+        onOpen: () => this.setState({ drawerId: c.id }),
+        box: this.box(on), tick: on ? '✓' : '',
+        rowStyle: 'display: grid; grid-template-columns: 38px 250px 170px 132px 150px 210px 96px 92px 78px 150px 168px 96px; border-bottom: 1px solid #f0f1f3; font-size: 12.5px; cursor: pointer; align-items: center; background: ' + (on ? '#fff6f2' : '#fff') + ';',
+        clientBadge: c.cliente ? 'flex: 0 0 auto; font-size: 9.5px; font-weight: 700; letter-spacing: .06em; padding: 2px 6px; border-radius: 3px; background: ' + ORANGE + '; color: #fff;' : 'display: none;',
+        sitStyle: 'font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; ' + (c.sit === 'Ativa' ? 'background: #e7f6ed; color: #1a7f45;' : 'background: #fdeeee; color: #b03636;')
+      };
+    });
+
+    const d = st.drawerId ? COMPANIES.find(c => c.id === st.drawerId) : null;
+    const conf = d ? CONF[d.conf] : CONF.g;
+
+    const total = ALL_UFS.reduce((a, u) => a + this.metricValue(u), 0);
+    const maxUf = Math.max.apply(null, ALL_UFS.map(u => this.metricValue(u)));
+    const ranking = ALL_UFS.slice().sort((a, b) => this.metricValue(b) - this.metricValue(a)).slice(0, 8);
+
+    const finalPool = enrichPool.filter(c => st.listaFilter === 'todos' || (st.listaFilter === 'sem-cliente' && !c.cliente) || (st.listaFilter === 'sem-vermelho' && c.conf !== 'r'));
+
+    return {
+      nav, savedFilters: ['Frotas reguladas — Sul', 'Agro > 50 veículos', 'Saúde SP capital'].map(n => ({
+        name: n, onClick: () => this.setState({ savedActive: n, screen: 'filtro' }),
+        style: 'font-size: 11.5px; padding: 5px 8px; border-radius: 4px; cursor: pointer; ' + (st.savedActive === n ? 'background: rgba(255,255,255,.1); color: #fff;' : 'color: #A09BA2;')
+      })),
+      screenEyebrow: titles[0], screenTitle: titles[1], screenHelp: titles[2],
+      headerActions: headerActions.map(a => ({
+        label: a.label, hint: a.hint || '', onClick: a.onClick || (() => {}),
+        style: 'padding: 10px 18px; border-radius: 999px; font-size: 12.5px; cursor: pointer; white-space: nowrap; transition: all 160ms ease; ' +
+          (a.primary ? 'background: ' + ORANGE + '; color: #fff; font-weight: 600; font-family: \'Neo Sans Pro\', sans-serif;' : 'border: 1px solid #d8dbdf; color: #2F323B;')
+      })),
+
+      isDashboard: st.screen === 'dashboard', isFiltro: st.screen === 'filtro', isResultados: st.screen === 'resultados',
+      isEnriquecimento: st.screen === 'enriquecimento', isLista: st.screen === 'lista', isMercado: st.screen === 'mercado',
+
+      kpis: [
+        { label: 'Empresas', value: '61,4 mi', note: 'tabela empresas · CNPJ raiz' },
+        { label: 'Estabelecimentos', value: '66,4 mi', note: 'matrizes + filiais' },
+        { label: 'Sócios', value: '24,8 mi', note: 'quadro societário' },
+        { label: 'Última carga', value: '02/07/2026', note: 'dump RF de junho/2026' }
+      ],
+      ufBars: ranking.map(u => ({ uf: u, count: this.metricValue(u).toLocaleString('pt-BR'), barStyle: 'height: 100%; width: ' + Math.round(this.metricValue(u) / maxUf * 100) + '%; background: ' + ORANGE + '; border-radius: 999px;' })),
+      situacaoSlices: [
+        { label: 'Ativa', count: '38,9 mi', pct: '58,6%', c: ORANGE, w: 58.6 },
+        { label: 'Baixada', count: '22,1 mi', pct: '33,3%', c: '#2F323B', w: 33.3 },
+        { label: 'Suspensa', count: '3,4 mi', pct: '5,1%', c: '#A09BA2', w: 5.1 },
+        { label: 'Inapta / nula', count: '2,0 mi', pct: '3,0%', c: '#d8dbdf', w: 3 }
+      ].map(s => ({ ...s, style: 'width: ' + s.w + '%; background: ' + s.c + ';', dot: this.dot(s.c, 9) })),
+      fileMeta: [
+        { label: 'Arquivo', value: 'receita_base.sqlite' },
+        { label: 'Tamanho em disco', value: '41,7 GB' },
+        { label: 'Linhas totais', value: '66.412.905' },
+        { label: 'Índices', value: 'uf, cnae_fiscal, situacao' }
+      ],
+
+      ufChips: ALL_UFS.map(u => ({ uf: u, onClick: () => this.toggle('ufs', u), style: this.chip(st.ufs.indexOf(u) >= 0, 'min-width: 46px;') })),
+      cnaeQuery: st.cnaeQuery,
+      onCnaeQuery: (e) => this.setState({ cnaeQuery: e.target.value }),
+      cnaeList: CNAES.filter(c => !st.cnaeQuery || (c.code + ' ' + c.desc).toLowerCase().indexOf(st.cnaeQuery.toLowerCase()) >= 0).map(c => {
+        const on = st.cnaes.indexOf(c.code) >= 0;
+        return { ...c, onClick: () => this.toggle('cnaes', c.code), box: this.box(on), tick: on ? '✓' : '',
+          style: 'display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 5px; cursor: pointer; background: ' + (on ? '#fff6f2' : 'transparent') + ';' };
+      }),
+      sitOptions: ['Ativa', 'Baixada', 'Suspensa', 'Inapta'].map(s => {
+        const on = st.sits.indexOf(s) >= 0;
+        return { label: s, onClick: () => this.toggle('sits', s), box: this.box(on), tick: on ? '✓' : '',
+          style: 'display: flex; align-items: center; gap: 9px; cursor: pointer; color: ' + (on ? '#000' : '#6c6c6c') + ';' };
+      }),
+      porteOptions: ['MEI', 'Pequena', 'Média', 'Grande'].map(s => {
+        const on = st.portes.indexOf(s) >= 0;
+        return { label: s, onClick: () => this.toggle('portes', s), box: this.box(on), tick: on ? '✓' : '',
+          style: 'display: flex; align-items: center; gap: 9px; cursor: pointer; color: ' + (on ? '#000' : '#6c6c6c') + ';' };
+      }),
+      secondary: [
+        { label: 'Natureza jurídica', value: 'Todas', hint: '2062, 2054, 2135…' },
+        { label: 'Capital social', value: 'acima de R$ 500 mil', hint: 'faixa mínima' },
+        { label: 'Data de abertura', value: 'antes de 2023', hint: 'evita empresas recém-abertas' }
+      ],
+      estimateLabel: (129402).toLocaleString('pt-BR'),
+      activeCriteria: [
+        st.ufs.length ? st.ufs.length + ' UFs: ' + st.ufs.join(', ') : 'Nenhuma UF selecionada',
+        st.cnaes.length ? st.cnaes.length + ' CNAEs selecionados' : 'Todos os CNAEs',
+        st.sits.length ? 'Situação: ' + st.sits.join(', ') : 'Qualquer situação',
+        st.portes.length ? 'Porte: ' + st.portes.join(', ') : 'Qualquer porte'
+      ],
+      onBuscar: () => this.go('resultados'),
+      onSaveFilter: () => {},
+
+      resultCols: ['', 'Razão social', 'Nome fantasia', 'CNPJ', 'UF / Município', 'CNAE principal', 'Situação', 'Abertura', 'Porte', 'Natureza jurídica', 'Telefone / e-mail', 'Capital'],
+      resultRows,
+      allBox: this.box(st.selected.length === COMPANIES.length), allTick: st.selected.length === COMPANIES.length ? '✓' : '',
+      onToggleAll: () => this.setState({ selected: st.selected.length === COMPANIES.length ? [] : COMPANIES.map(c => c.id) }),
+      selectionLabel: st.selected.length ? st.selected.length + ' de 16 linhas selecionadas nesta página' : 'Nenhuma linha selecionada',
+      enrichHint: st.selected.length ? 'Envia ' + st.selected.length + ' CNPJs para validação externa' : 'Selecione ao menos uma linha para habilitar',
+      enrichBtnStyle: 'padding: 11px 22px; border-radius: 999px; font-family: \'Neo Sans Pro\', sans-serif; font-weight: 700; font-size: 13px; transition: all 160ms ease; ' +
+        (st.selected.length ? 'background: ' + ORANGE + '; color: #fff; cursor: pointer;' : 'background: #eef0f2; color: #A09BA2; cursor: not-allowed;'),
+      onEnriquecer: () => { if (st.selected.length) this.setState({ screen: 'enriquecimento', enrichProgress: 0, enrichRunning: true, enrichDone: false }); },
+
+      enrichHeadline: st.enrichDone ? 'Enriquecimento concluído' : (st.enrichRunning ? 'Consultando fontes externas…' : 'Processamento pausado'),
+      enrichSub: enrichPool.length + ' CNPJs na fila · BrasilAPI, fallback ReceitaWS',
+      enrichBarStyle: 'height: 100%; width: ' + st.enrichProgress + '%; background: ' + (st.enrichDone ? '#21a35a' : ORANGE) + '; border-radius: 999px; transition: width 220ms linear;',
+      enrichDoneLabel: shown + ' de ' + enrichPool.length + ' processados',
+      enrichEtaLabel: st.enrichDone ? 'tempo total: 00:03' : 'restante: ~00:0' + Math.max(1, Math.ceil((100 - st.enrichProgress) / 34)),
+      onTogglePause: () => { if (st.enrichDone) return this.go('lista'); this.setState({ enrichRunning: !st.enrichRunning }); },
+      pauseLabel: st.enrichDone ? 'Ver lista final' : (st.enrichRunning ? 'Pausar' : 'Retomar'),
+      pauseBtnStyle: 'padding: 11px 24px; border-radius: 999px; font-family: \'Neo Sans Pro\', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; ' +
+        (st.enrichDone ? 'background: ' + ORANGE + '; color: #fff;' : 'border: 1px solid #2F323B; color: #2F323B;'),
+      confidenceCards: [
+        { k: 'g', title: 'Verde', desc: 'Dado confirmado por fonte oficial atualizada. Pode ir direto para prospecção.' },
+        { k: 'y', title: 'Amarelo', desc: 'Dado parcialmente confirmado ou desatualizado. Requer conferência antes do contato.' },
+        { k: 'r', title: 'Vermelho', desc: 'Não encontrado ou conflitante. O campo fica em branco — nunca preenchido por suposição.' }
+      ].map(c => ({
+        title: c.title, desc: c.desc, dot: this.dot(CONF[c.k].color, 11),
+        count: processed.filter(x => x.conf === c.k).length,
+        style: 'border: 1px solid #e3e5e8; border-left: 3px solid ' + CONF[c.k].color + '; border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 8px;'
+      })),
+      enrichCols: ['', 'Razão social', 'CNPJ', 'Telefone atualizado', 'E-mail', 'Observação da fonte'],
+      enrichRows: processed.map(c => ({
+        razao: c.razao, cnpjShort: c.cnpj, dot: this.dot(CONF[c.conf].color, 9),
+        telefone: c.conf === 'r' ? '—' : c.tel,
+        email: c.conf === 'r' ? '—' : c.email,
+        note: c.conf === 'g' ? 'BrasilAPI · atualizado em 06/2026' : c.conf === 'y' ? 'ReceitaWS · última alteração em 2021' : 'Sem retorno nas duas fontes'
+      })),
+      logCountLabel: processed.filter(c => c.conf === 'r').length + ' falhas registradas',
+      errorLog: processed.filter(c => c.conf === 'r').map((c, i) => ({ time: '10:2' + (i + 1) + ':04', cnpj: c.cnpj, msg: i % 2 ? 'HTTP 429 — rate limit, reagendado' : 'HTTP 404 — CNPJ não retornado pela fonte' })),
+
+      listaTitle: finalPool.length + ' empresas na lista final',
+      listaFilters: [['todos', 'Todas'], ['sem-cliente', 'Excluir clientes'], ['sem-vermelho', 'Excluir vermelhos']].map(([k, l]) => ({
+        label: l, onClick: () => this.setState({ listaFilter: k }), style: this.chip(st.listaFilter === k)
+      })),
+      finalCols: ['', 'Razão social', 'CNPJ', 'Telefone', 'E-mail', 'UF / Município', 'Confiança'],
+      finalRows: finalPool.map(c => ({
+        razao: c.razao, cnpjShort: c.cnpj, telefone: c.conf === 'r' ? '—' : c.tel, email: c.conf === 'r' ? '—' : c.email,
+        local: c.uf + ' · ' + c.mun, confLabel: c.conf === 'g' ? 'Confirmado' : c.conf === 'y' ? 'Parcial' : 'Não encontrado',
+        dot: this.dot(CONF[c.conf].color, 9),
+        rowStyle: 'display: grid; grid-template-columns: 26px 240px 132px 138px 168px 150px 90px; border-bottom: 1px solid #f0f1f3; font-size: 12.5px; align-items: center; background: ' + (c.cliente ? '#fffaf7' : '#fff') + ';',
+        clientBadge: c.cliente ? 'flex: 0 0 auto; font-size: 9.5px; font-weight: 700; letter-spacing: .06em; padding: 2px 6px; border-radius: 3px; background: ' + ORANGE + '; color: #fff;' : 'display: none;'
+      })),
+      exportCols: ['Razão social', 'Nome fantasia', 'CNPJ', 'Telefone', 'E-mail', 'UF/Município', 'CNAE', 'Porte', 'Confiança', 'Cliente'].map(c => ({
+        label: c, onClick: () => this.toggle('exportCols', c),
+        style: this.chip(st.exportCols.indexOf(c) >= 0, 'font-size: 11.5px; padding: 5px 10px;')
+      })),
+      formats: [['xlsx', 'Excel .xlsx'], ['csv', 'CSV']].map(([k, l]) => ({
+        label: l, onClick: () => this.setState({ format: k }), style: this.chip(st.format === k, 'flex: 1;')
+      })),
+      exportLabel: 'Exportar ' + finalPool.length + ' linhas',
+      exportNote: st.exportCols.length + ' colunas · arquivo salvo em ~/Documentos/Lets/prospeccao_' + (st.format === 'xlsx' ? 'xlsx' : 'csv'),
+      onExport: () => {},
+
+      mapRef: this.mapRef,
+      mapModes: [['calor', 'Mapa de calor'], ['dispersao', 'Dispersão']].map(([k, l]) => ({
+        label: l, onClick: () => this.setState({ mapMode: k }), style: this.chip(st.mapMode === k, 'flex: 1;')
+      })),
+      mapModeHelp: st.mapMode === 'calor' ? 'Manchas de calor mostram onde o mercado se concentra — bom para leitura macro de praças.' : 'Bolhas proporcionais permitem comparar UFs com precisão e ler valores individuais.',
+      mapMetrics: [['total', 'Empresas no recorte'], ['grande', 'Somente porte grande'], ['clientes', 'Já clientes Let\'s']].map(([k, l]) => ({
+        label: l, onClick: () => this.setState({ mapMetric: k }),
+        style: 'padding: 8px 12px; border-radius: 6px; font-size: 12.5px; cursor: pointer; ' + (st.mapMetric === k ? 'background: #fff6f2; color: ' + ORANGE + '; font-weight: 600; border: 1px solid ' + ORANGE + ';' : 'color: #2F323B; border: 1px solid #e3e5e8;')
+      })),
+      mapCriteria: [
+        { label: 'CNAE', value: 'Transporte de carga + atacado' },
+        { label: 'Situação', value: 'Ativa' },
+        { label: 'Porte', value: 'Média e grande' },
+        { label: 'Abertura', value: 'antes de 2023' }
+      ],
+      mapTitle: st.mapMode === 'calor' ? 'Densidade de empresas — mapa de calor' : 'Densidade de empresas — dispersão por UF',
+      mapTotalLabel: total.toLocaleString('pt-BR') + ' empresas no recorte',
+      mapRanking: ranking.map(u => ({ uf: u, count: this.metricValue(u).toLocaleString('pt-BR'), barStyle: 'height: 100%; width: ' + Math.round(this.metricValue(u) / maxUf * 100) + '%; background: ' + ORANGE + '; border-radius: 999px;' })),
+      onGoFiltro: () => this.go('filtro'),
+
+      drawerOpen: !!d,
+      onCloseDrawer: () => this.setState({ drawerId: null }),
+      drawerRazao: d ? d.razao : '', drawerCnpj: d ? d.cnpj : '',
+      drawerClientBadge: d && d.cliente ? 'font-size: 9.5px; font-weight: 700; letter-spacing: .06em; padding: 2px 7px; border-radius: 3px; background: ' + ORANGE + '; color: #fff;' : 'display: none;',
+      drawerConfDot: this.dot(conf.color, 11),
+      drawerConfLabel: conf.label,
+      drawerConfSource: d && d.conf === 'r' ? 'sem fonte' : 'BrasilAPI · 06/2026',
+      drawerFields: d ? [
+        { label: 'Nome fantasia', value: d.fantasia },
+        { label: 'Situação cadastral', value: d.sit },
+        { label: 'CNAE principal', value: d.cnae },
+        { label: 'Natureza jurídica', value: d.natureza },
+        { label: 'Porte', value: d.porte },
+        { label: 'Capital social', value: d.capital },
+        { label: 'Data de abertura', value: d.abertura },
+        { label: 'Município / UF', value: d.mun + ' — ' + d.uf },
+        { label: 'Telefone (base RF)', value: d.tel },
+        { label: 'E-mail (base RF)', value: d.email },
+        { label: 'Status comercial', value: d.cliente ? 'Cliente ativo Let\'s' : 'Sem relação comercial' },
+        { label: 'Matriz / filial', value: 'Matriz' }
+      ] : [],
+      drawerSocios: (SOCIOS[st.drawerId] || SOCIOS.default).map(s => ({ ...s, initials: s.nome.split(' ').map(x => x[0]).slice(0, 2).join('') })),
+      drawerHistory: d ? [
+        { title: 'Enriquecimento via BrasilAPI', detail: d.conf === 'r' ? 'Nenhum retorno — campos de contato mantidos em branco.' : 'Telefone e endereço confirmados.', date: '18/07/2026', dot: 'position: absolute; left: -6px; top: 4px; width: 9px; height: 9px; border-radius: 999px; background: ' + CONF[d.conf].color + ';' },
+        { title: 'Cruzamento com base de clientes', detail: d.cliente ? 'Encontrado na carteira Let\'s (contrato ativo).' : 'Não encontrado na carteira Let\'s.', date: '18/07/2026', dot: 'position: absolute; left: -6px; top: 4px; width: 9px; height: 9px; border-radius: 999px; background: ' + DARK + ';' },
+        { title: 'Importado do dump da Receita Federal', detail: 'Carga inicial do arquivo receita_base.sqlite.', date: '02/07/2026', dot: 'position: absolute; left: -6px; top: 4px; width: 9px; height: 9px; border-radius: 999px; background: #A09BA2;' }
+      ] : [],
+      onDrawerEnrich: () => { if (d) this.setState({ drawerId: null, screen: 'enriquecimento', selected: [d.id], enrichProgress: 0, enrichRunning: true, enrichDone: false }); }
+    };
+  }
+}
+
+</script>
+</body>
+</html>

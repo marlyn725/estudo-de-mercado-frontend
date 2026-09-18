@@ -1,0 +1,292 @@
+/* ==========================================================================
+   Let's Design System — Colors & Type Tokens
+   ==========================================================================
+   Brand: Let's (lets.com.br) — fleet management subsidiary of VIXPAR.
+   Tagline: "Frota sob medida para sua empresa" / "Transparência que move o futuro."
+   Source: Figma "Operações reguladas.fig" + uploaded brand assets.
+   ========================================================================== */
+
+/* ----- Brand fonts ----------------------------------------------------------
+   Neo Sans Pro — licensed brand font, served locally from /fonts.
+   Exo 2 retained as a fallback for any environment that cannot load OTF.
+   --------------------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,700;0,900;1,400;1,700;1,900&display=swap');
+
+@font-face {
+  font-family: 'Neo Sans Pro';
+  src: url('/fonts/NeoSansProLight.OTF') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neo Sans Pro';
+  src: url('/fonts/NeoSansProLightIt.OTF') format('opentype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neo Sans Pro';
+  src: url('/fonts/NeoSansProRegular.OTF') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neo Sans Pro';
+  src: url('/fonts/NeoSansProItalic.OTF') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neo Sans Pro';
+  src: url('/fonts/NeoSansProMedium.OTF') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neo Sans Pro';
+  src: url('/fonts/NeoSansProMedIt.OTF') format('opentype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neo Sans Pro';
+  src: url('/fonts/NeoSansProBold.OTF') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neo Sans Pro';
+  src: url('/fonts/NeoSansProBoldIt.OTF') format('opentype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neo Sans Pro';
+  src: url('/fonts/NeoSansProBlack.OTF') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neo Sans Pro';
+  src: url('/fonts/NeoSansProBlackIt.OTF') format('opentype');
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neo Sans Pro';
+  src: url('/fonts/NeoSansProUltra.OTF') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neo Sans Pro';
+  src: url('/fonts/NeoSansProUltIt.OTF') format('opentype');
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* ───── Brand colors ───────────────────────────────────────────── */
+  --lets-orange:        rgb(241, 90, 34);   /* #F15A22 — primary brand orange (top bar, CTAs, highlights) */
+  --lets-orange-dark:   rgb(231, 86, 19);   /* #E75613 — pressed / shadow orange */
+  --lets-orange-deep:   rgb(232, 89, 13);   /* #E8590D — alt darker orange (rare) */
+  --lets-navy:          rgb(35, 43, 89);    /* #232B59 — VIXPAR parent-brand navy, used for V I X P A R lockup */
+  --lets-yellow:        rgb(212, 213, 13);  /* #D4D50D — accent acid yellow (rare, in some layouts) */
+  --lets-black:         rgb(17, 15, 12);    /* #110F0C — near-black, logo background, text */
+  --lets-white:         rgb(255, 255, 255); /* #FFFFFF */
+
+  /* ───── Neutral scale ──────────────────────────────────────────── */
+  --lets-ink:           rgb(0, 0, 0);       /* body text */
+  --lets-gray-100:      rgb(247, 247, 247);
+  --lets-gray-200:      rgb(234, 234, 234); /* #EAEAEA — section panel background ("Autoridade / Solução") */
+  --lets-gray-300:      rgb(212, 212, 212);
+  --lets-gray-400:      rgb(160, 160, 160);
+  --lets-gray-500:      rgb(108, 108, 108);
+
+  /* ───── Semantic foreground / background ──────────────────────── */
+  --fg:                 var(--lets-ink);
+  --fg-muted:           var(--lets-gray-500);
+  --fg-on-orange:       var(--lets-white);
+  --fg-on-dark:         var(--lets-white);
+  --fg-brand:           var(--lets-orange);
+  --bg:                 var(--lets-white);
+  --bg-panel:           var(--lets-gray-200);
+  --bg-brand:           var(--lets-orange);
+  --bg-dark:            var(--lets-black);
+  --bg-navy:            var(--lets-navy);
+
+  /* ───── Borders / dividers ────────────────────────────────────── */
+  --border-strong:      var(--lets-ink);
+  --border-brand:       var(--lets-orange);
+  --border-default:     var(--lets-gray-300);
+  --border-width-bar:   2px;       /* hairline between orange footer + body */
+  --border-width-card:  3px;       /* orange outline on quote/CTA cards */
+
+  /* ───── Radii ─────────────────────────────────────────────────── */
+  --radius-sm:          6px;
+  --radius-md:          12px;
+  --radius-lg:          24px;
+  --radius-pill:        999px;
+  --radius-hero:        0px 0px 0px 122px;     /* asymmetric bottom-left corner — TOPO 1 hero */
+  --radius-quote:       0px 70px 0px 70px;     /* diagonal quote/CTA card */
+
+  /* ───── Spacing ───────────────────────────────────────────────── */
+  --space-1:            4px;
+  --space-2:            8px;
+  --space-3:            12px;
+  --space-4:            16px;
+  --space-5:            24px;
+  --space-6:            32px;
+  --space-7:            44px;
+  --space-8:            60px;
+  --space-9:            96px;
+
+  /* ───── Shadows ───────────────────────────────────────────────── */
+  --shadow-sm:          0 1px 2px rgba(17,15,12,0.08);
+  --shadow-md:          0 8px 24px rgba(17,15,12,0.12);
+  --shadow-lg:          0 20px 60px rgba(17,15,12,0.18);
+  --shadow-protect:     inset 0 -120px 120px -40px rgba(0,0,0,0.85);
+
+  /* ───── Type — families ───────────────────────────────────────── */
+  --font-display:       'Neo Sans Pro', 'Exo 2', system-ui, sans-serif;
+  --font-body:          'Neo Sans Pro', 'Exo 2', system-ui, sans-serif;
+  --font-mono:          ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ───── Type — weights ────────────────────────────────────────── */
+  --weight-regular:     400;
+  --weight-medium:      500;
+  --weight-bold:        700;
+  --weight-black:       900;
+
+  /* ───── Type — sizes (display) ─────────────────────────────────── */
+  --size-display-xl:    77px;     /* TÍTULO hero italic */
+  --size-display-lg:    48px;
+  --size-display-md:    36px;
+  --size-h1:            33px;     /* "Frota sob medida para sua empresa" */
+  --size-h2:            31px;     /* "Transparência que move o futuro." */
+  --size-h3:            30px;     /* body callout — same size as paragraph for hierarchy via weight */
+  --size-body-lg:       30px;     /* email body copy (large because emails are zoomed) */
+  --size-body:          18px;     /* default body */
+  --size-body-sm:       16px;     /* "lets.com.br" footer */
+  --size-caption:       13px;
+  --size-micro:         11px;
+
+  /* ───── Type — line height ────────────────────────────────────── */
+  --lh-tight:           1.0;      /* hero italics */
+  --lh-snug:            1.06;     /* H1/H2 */
+  --lh-normal:          1.10;     /* tight body */
+  --lh-relaxed:         1.40;     /* email body */
+  --lh-loose:           1.60;     /* small print */
+}
+
+/* ============================================================
+   Semantic role classes
+   ============================================================ */
+
+.font-display    { font-family: var(--font-display); }
+.font-body       { font-family: var(--font-body); }
+
+.h1, h1 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--size-h1);
+  line-height: var(--lh-snug);
+  color: var(--fg);
+  margin: 0;
+}
+
+.h2, h2 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--size-h2);
+  line-height: var(--lh-snug);
+  color: var(--fg);
+  margin: 0;
+}
+
+.h3, h3 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--size-h3);
+  line-height: var(--lh-normal);
+  color: var(--fg);
+  margin: 0;
+}
+
+.display-italic {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-style: italic;
+  font-size: var(--size-display-xl);
+  line-height: var(--lh-tight);
+  color: var(--fg-brand);
+  letter-spacing: -0.01em;
+}
+
+.eyebrow {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--size-body-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-brand);
+}
+
+.body-lg, p.lg {
+  font-family: var(--font-body);
+  font-size: var(--size-body-lg);
+  line-height: var(--lh-relaxed);
+  color: var(--fg);
+}
+
+.body, p {
+  font-family: var(--font-body);
+  font-size: var(--size-body);
+  line-height: var(--lh-relaxed);
+  color: var(--fg);
+}
+
+.body-sm, small {
+  font-family: var(--font-body);
+  font-size: var(--size-body-sm);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+
+strong, b { font-weight: var(--weight-bold); }
+em, i    { font-style: italic; }
+
+a {
+  color: var(--fg-brand);
+  text-decoration: none;
+  transition: opacity 160ms ease;
+}
+a:hover { opacity: 0.75; }
+a:active { opacity: 0.6; }
+
+/* ============================================================
+   Utilities
+   ============================================================ */
+
+.bg-orange { background: var(--bg-brand); color: var(--fg-on-orange); }
+.bg-dark   { background: var(--bg-dark); color: var(--fg-on-dark); }
+.bg-navy   { background: var(--bg-navy); color: var(--fg-on-dark); }
+.bg-panel  { background: var(--bg-panel); color: var(--fg); }
+.bg-paper  { background: var(--bg); color: var(--fg); }
+
+.text-orange { color: var(--fg-brand); }
+.text-white  { color: var(--lets-white); }
+.text-navy   { color: var(--lets-navy); }
+.text-ink    { color: var(--lets-ink); }
