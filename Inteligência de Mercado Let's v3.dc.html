@@ -698,8 +698,11 @@ a:hover { opacity: .75; }
                   </sc-if>
                 </sc-if>
                 <sc-if value="{{ mTemSetorSelecionado }}" hint-placeholder-val="{{ false }}">
-                  <div onClick="{{ mSetorSelecionadoChip.onClick }}" style="display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: #fff6f2; border: 1px solid #F15A22; color: #F15A22; font-size: 12px; cursor: pointer; flex: 0 0 auto; width: fit-content;">
-                    <span>{{ mSetorSelecionadoChip.label }}</span><span style="font-size: 9px;">✕</span>
+                  <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div onClick="{{ mSetorSelecionadoChip.onClick }}" style="display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: #fff6f2; border: 1px solid #F15A22; color: #F15A22; font-size: 12px; cursor: pointer; flex: 0 0 auto; width: fit-content;">
+                      <span>{{ mSetorSelecionadoChip.label }}</span><span style="font-size: 9px;">✕</span>
+                    </div>
+                    <span onClick="{{ onExpandirSetor }}" style="font-size: 11px; color: #A09BA2; text-decoration: underline; cursor: pointer;">usar CNAEs individuais (pra remover algum)</span>
                   </div>
                 </sc-if>
               </div>
@@ -1711,6 +1714,27 @@ class Component extends DCLogic {
         this.setState({ mCnaeResults: r, mCnaeCache: cache });
       })
       .catch(() => {});
+  }
+
+  // usado quando o usuário quer ajuste fino (remover 1+ CNAEs de dentro do
+  // Setor escolhido, ex.: "Eletricidade, gás e outras utilidades" mas sem os de
+  // óleo e gás) — o filtro de Setor é fechado por natureza (é isso que permite
+  // considerar CNAE principal+secundário rápido, ver conversa sobre performance),
+  // então a única forma de remover códigos específicos é "abrir" o Setor pros
+  // CNAEs que o compõem (perdendo a busca por secundário) e editar dali.
+  expandirSetorParaCnaes() {
+    const divisao = this.state.mSetorSelecionado;
+    if (!divisao) return;
+    apiGet('/api/cnaes/por-divisao/' + divisao)
+      .then(lista => {
+        const cache = { ...this.state.mCnaeCache };
+        lista.forEach(c => { cache[c.codigo] = c.descricao; });
+        this.setState({
+          mCnaes: lista.map(c => c.codigo), mCnaeCache: cache,
+          mSetorSelecionado: null, mSetorSelecionadoNome: '',
+        });
+      })
+      .catch(e => this.setState({ apiError: 'Não foi possível abrir os CNAEs do setor: ' + e.message }));
   }
 
   carregarPerfis() {
@@ -3104,6 +3128,7 @@ class Component extends DCLogic {
         label: st.mSetorSelecionadoNome || st.mSetorSelecionado,
         onClick: (e) => { e.stopPropagation(); this.setState({ mSetorSelecionado: null, mSetorSelecionadoNome: '' }); }
       } : { label: '', onClick: () => {} },
+      onExpandirSetor: (e) => { e.stopPropagation(); this.expandirSetorParaCnaes(); },
       mostraFiltroMunicipio: st.mEscopo === 'regional',
       mMunicipioQuery: st.mMunicipioQuery,
       mMunicipioCaret: st.mMunicipioListOpen ? '▴' : '▾',
