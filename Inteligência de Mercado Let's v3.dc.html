@@ -220,18 +220,56 @@ a:hover { opacity: .75; }
 
                 <sc-if value="{{ anEscopoTempo }}" hint-placeholder-val="{{ false }}">
                   <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-                      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <sc-for list="{{ anMetricasTempoPills }}" as="m" hint-placeholder-count="4">
-                          <div onClick="{{ m.onClick }}" style="{{ m.style }}">{{ m.label }}</div>
-                        </sc-for>
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                      <sc-for list="{{ anAnaliseDrops }}" as="d" hint-placeholder-count="2">
+                        <div style="position: relative; z-index: 5;">
+                          <div onClick="{{ d.onToggle }}" style="{{ d.headStyle }}">
+                            <span style="flex: 1; white-space: nowrap;">{{ d.summary }}</span>
+                            <span style="color: #A09BA2; font-size: 10px;">{{ d.caret }}</span>
+                          </div>
+                          <sc-if value="{{ d.open }}" hint-placeholder-val="{{ false }}">
+                            <div style="position: absolute; top: 100%; left: 0; margin-top: 4px; min-width: 190px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); padding: 6px; z-index: 30;">
+                              <sc-for list="{{ d.items }}" as="i" hint-placeholder-count="4">
+                                <div onClick="{{ i.onClick }}" style="{{ i.style }}">
+                                  <div style="{{ i.box }}"></div>
+                                  <span style="flex: 1;">{{ i.label }}</span>
+                                </div>
+                              </sc-for>
+                            </div>
+                          </sc-if>
+                        </div>
+                      </sc-for>
+                      <div style="position: relative; z-index: 5;">
+                        <div onClick="{{ anAnaliseAnoDrop.onToggle }}" style="{{ anAnaliseAnoDrop.headStyle }}">
+                          <span style="flex: 1; white-space: nowrap;">{{ anAnaliseAnoDrop.summary }}</span>
+                          <span style="color: #A09BA2; font-size: 10px;">{{ anAnaliseAnoDrop.caret }}</span>
+                        </div>
+                        <sc-if value="{{ anAnaliseAnoDrop.open }}" hint-placeholder-val="{{ false }}">
+                          <div style="position: absolute; top: 100%; left: 0; margin-top: 4px; min-width: 100px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); padding: 6px; z-index: 30;">
+                            <sc-for list="{{ anAnaliseAnoDrop.items }}" as="i" hint-placeholder-count="1">
+                              <div onClick="{{ i.onClick }}" style="{{ i.style }}">
+                                <div style="{{ i.box }}"></div>
+                                <span style="flex: 1;">{{ i.label }}</span>
+                              </div>
+                            </sc-for>
+                          </div>
+                        </sc-if>
                       </div>
-                      <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                        <sc-for list="{{ anTipoGraficoTabs }}" as="t" hint-placeholder-count="3">
+                      <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto;">
+                        <sc-for list="{{ anTipoGraficoTabs }}" as="t" hint-placeholder-count="4">
                           <div onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</div>
                         </sc-for>
                       </div>
                     </div>
+                    <sc-if value="{{ anAnaliseLegend.length }}" hint-placeholder-val="{{ false }}">
+                      <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                        <sc-for list="{{ anAnaliseLegend }}" as="l" hint-placeholder-count="2">
+                          <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #2F323B;">
+                            <div style="{{ l.dot }}"></div><span>{{ l.label }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
                     <div ref="{{ analiseRef }}" style="width: 100%;"></div>
                   </div>
                 </sc-if>
@@ -1185,6 +1223,19 @@ const METRICA_COMPARACAO_ANALISE = [
   { value: 'faturamento', label: 'Faturamento (R$)' },
   { value: 'roic', label: 'ROIC' }
 ];
+const METRICA_TEMPO_ANALISE = [
+  { value: 'frota', label: 'Frota (veículos)' },
+  { value: 'faturamento', label: 'Faturamento (R$)' },
+  { value: 'roic', label: 'ROIC (mediana)' },
+  { value: 'empresas', label: 'Empresas atendidas' }
+];
+const COR_METRICA_ANALISE = { frota: '#F15A22', faturamento: '#2B6CB0', roic: '#2F9E44', empresas: '#7048E8' };
+const MESES_COMPLETO = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+function mesNomeCompleto(iso) {
+  if (!iso) return '—';
+  const m = parseInt(iso.slice(5, 7), 10) - 1;
+  return MESES_COMPLETO[m] || iso;
+}
 
 const CONF = {
   g: { color: '#21a35a', label: 'Confirmado por fonte oficial atualizada' },
@@ -1245,7 +1296,9 @@ class Component extends DCLogic {
       // combinação de métricas cabe; "clientes" pode ter centenas de pontos, por
       // isso só existe como dispersão (nunca linha/barra nomeada por cliente)
       anEscopo: 'tempo',
-      anMetricasTempo: ['frota', 'faturamento'],
+      anMetricaPrincipal: 'frota',
+      anMetricaSecundaria: '',
+      anAno: null,
       anTipoGrafico: 'linha',
       anMetricaX: 'frota',
       anMetricaY: 'roic',
@@ -1480,18 +1533,40 @@ class Component extends DCLogic {
     this.setState({ anEscopo: escopo });
   }
 
-  // "tempo" aceita quantas métricas quiser marcadas (nunca mais que ~7 pontos no
-  // eixo X, cabe qualquer combinação) — "clientes" é sempre X/Y único, nunca
-  // multi-seleção, porque vira um ponto por empresa (poderia ser centenas).
-  onToggleMetricaTempo(metrica) {
-    const atuais = this.state.anMetricasTempo.slice();
-    const i = atuais.indexOf(metrica);
-    if (i >= 0) atuais.splice(i, 1); else atuais.push(metrica);
-    this.setState({ anMetricasTempo: atuais });
+  // "tempo" sempre tem uma métrica principal + opcionalmente uma pra cruzar,
+  // igual ao card "Cruzamento de dados" (nunca multi-seleção em pills) —
+  // "clientes" é sempre X/Y único também, porque vira um ponto por empresa.
+  onMudarMetricaTempo(campo, valor) {
+    const patch = { [campo]: valor };
+    if (campo === 'anMetricaPrincipal' && valor === this.state.anMetricaSecundaria) patch.anMetricaSecundaria = '';
+    this.setState(patch);
+  }
+
+  onMudarAnoAnalise(ano) {
+    this.setState({ anAno: ano });
   }
 
   onMudarTipoGrafico(tipo) {
     this.setState({ anTipoGrafico: tipo });
+  }
+
+  // balão com o valor real, sempre visível (não só no hover) — ancorado acima
+  // do ponto/topo da barra
+  _balaoAcima(cx, cy, texto, cor) {
+    const txt = this._escSvg(texto);
+    const lw = Math.max(20, txt.length * 5.6 + 12), lh = 16;
+    const x = cx - lw / 2, y = cy - lh - 7;
+    return '<rect x="' + x + '" y="' + y + '" width="' + lw + '" height="' + lh + '" rx="4" fill="#FFFFFF" fill-opacity="0.94" stroke="' + cor + '" stroke-width="1"></rect>' +
+      '<text x="' + cx + '" y="' + (y + lh - 4.5) + '" font-size="9.5" fill="#2F323B" text-anchor="middle" font-weight="600">' + txt + '</text>';
+  }
+
+  // mesmo balão, ancorado à direita da ponta da barra (uso em barra horizontal)
+  _balaoDireita(x0, cy, texto, cor) {
+    const txt = this._escSvg(texto);
+    const lw = Math.max(20, txt.length * 5.6 + 12), lh = 16;
+    const x = x0 + 5, y = cy - lh / 2;
+    return '<rect x="' + x + '" y="' + y + '" width="' + lw + '" height="' + lh + '" rx="4" fill="#FFFFFF" fill-opacity="0.94" stroke="' + cor + '" stroke-width="1"></rect>' +
+      '<text x="' + (x + lw / 2) + '" y="' + (y + lh - 4.5) + '" font-size="9.5" fill="#2F323B" text-anchor="middle" font-weight="600">' + txt + '</text>';
   }
 
   onMudarMetricaComparacao(eixo, valor) {
@@ -1514,7 +1589,7 @@ class Component extends DCLogic {
     if (!el || !window.d3) { clearTimeout(this._an); this._an = setTimeout(() => this.tryDrawAnaliseChart(), 200); return; }
     const st = this.state;
     const key = [
-      st.anEscopo, st.anMetricasTempo.join(','), st.anTipoGrafico, st.anMetricaX, st.anMetricaY,
+      st.anEscopo, st.anMetricaPrincipal, st.anMetricaSecundaria, st.anAno, st.anTipoGrafico, st.anMetricaX, st.anMetricaY,
       el.clientWidth, JSON.stringify(st.anSerieTemporal), JSON.stringify(st.anComparacao),
     ].join('|');
     if (el.dataset.key === key) return;
@@ -1526,67 +1601,140 @@ class Component extends DCLogic {
     const st = this.state;
     const w = el.clientWidth || 600;
     // cor por métrica em ordem fixa (nunca muda conforme o que está selecionado —
-    // faturamento é sempre azul, não importa se é a 1ª ou a 3ª métrica marcada)
-    const CORES = { frota: '#F15A22', faturamento: '#2B6CB0', roic: '#2F9E44', empresas: '#7048E8' };
-    const LABELS = { frota: 'Frota (veículos)', faturamento: 'Faturamento (R$)', roic: 'ROIC (mediana)', empresas: 'Empresas atendidas' };
+    // faturamento é sempre azul, não importa se é a principal ou a de cruzamento)
+    const CORES = COR_METRICA_ANALISE;
+    const LABELS = {};
+    METRICA_TEMPO_ANALISE.forEach(m => { LABELS[m.value] = m.label; });
 
     if (st.anEscopo === 'tempo') {
-      const serie = (st.anSerieTemporal && st.anSerieTemporal.pontos) || [];
-      if (!serie.length || !st.anMetricasTempo.length) {
-        el.innerHTML = '<div style="padding:16px 4px;color:#A09BA2;font-size:12px;">Selecione ao menos uma métrica.</div>';
+      const todos = (st.anSerieTemporal && st.anSerieTemporal.pontos) || [];
+      if (!todos.length) {
+        el.innerHTML = '<div style="padding:16px 4px;color:#A09BA2;font-size:12px;">Carregando dados…</div>';
         return;
       }
-      const alturaPainel = 130, margemEsq = 58, margemDir = 16, margemTopo = 16, margemBaixo = 24;
+      const anoSel = st.anAno || todos[todos.length - 1].mes.slice(0, 4);
+      const serie = todos.filter(p => p.mes.slice(0, 4) === anoSel);
+      if (!serie.length) {
+        el.innerHTML = '<div style="padding:16px 4px;color:#A09BA2;font-size:12px;">Sem dados para ' + anoSel + '.</div>';
+        return;
+      }
+      const principal = st.anMetricaPrincipal, secundaria = st.anMetricaSecundaria || null;
+      const corP = CORES[principal] || ORANGE, corS = secundaria ? (CORES[secundaria] || '#2B6CB0') : null;
+      const tipo = st.anTipoGrafico;
+      const altura = 300, margemTopo = 30, margemBaixo = 54;
+      const margemEsq = tipo === 'barra_h' ? 96 : 54;
+      const margemDir = 16;
       const larguraUtil = w - margemEsq - margemDir;
-      let html = '';
-      st.anMetricasTempo.forEach(metrica => {
-        const vals = serie.map(p => p[metrica]).filter(v => v != null);
-        const max = Math.max.apply(null, vals.concat([0]));
-        const min = Math.min.apply(null, vals.concat([0]));
-        const span = (max - min) || 1;
-        const escalaYv = (v) => margemTopo + (alturaPainel - margemTopo - margemBaixo) * (1 - (v - min) / span);
-        const passoX = larguraUtil / Math.max(1, serie.length - 1);
-        const escalaXi = (i) => margemEsq + i * passoX;
-        const cor = CORES[metrica] || '#6c6c6c';
-        const titulo = (p) => this._escSvg(p.mes) + ': ' + this._escSvg(this._fmtMetricaAnalise(metrica, p[metrica]));
 
-        let corpo = '';
-        if (st.anTipoGrafico === 'barra_h') {
-          const passoY2 = (alturaPainel - margemTopo - margemBaixo) / Math.max(1, serie.length - 1);
-          const alturaBarra = Math.min(16, passoY2 * .6);
+      // dispersão entre as duas métricas — um ponto por mês, só faz sentido cruzando
+      if (tipo === 'dispersao' && secundaria) {
+        const pares = serie.filter(p => p[principal] != null && p[secundaria] != null);
+        if (!pares.length) {
+          el.innerHTML = '<div style="padding:16px 4px;color:#A09BA2;font-size:12px;">Sem meses com as duas métricas preenchidas.</div>';
+          return;
+        }
+        const xs = pares.map(p => p[principal]), ys = pares.map(p => p[secundaria]);
+        const xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs);
+        const yMin = Math.min.apply(null, ys), yMax = Math.max.apply(null, ys);
+        const escalaX = (v) => margemEsq + larguraUtil * ((v - xMin) / ((xMax - xMin) || 1));
+        const escalaY = (v) => altura - margemBaixo - (altura - margemTopo - margemBaixo) * ((v - yMin) / ((yMax - yMin) || 1));
+        let pts = '', rotulos = '';
+        pares.forEach(p => {
+          const cx = escalaX(p[principal]), cy = escalaY(p[secundaria]);
+          const tt = mesNomeCompleto(p.mes) + '&#10;' + LABELS[principal] + ': ' + this._escSvg(this._fmtMetricaAnalise(principal, p[principal])) +
+            '&#10;' + LABELS[secundaria] + ': ' + this._escSvg(this._fmtMetricaAnalise(secundaria, p[secundaria]));
+          pts += '<circle cx="' + cx + '" cy="' + cy + '" r="5" fill="' + ORANGE + '" fill-opacity="0.65" stroke="' + ORANGE + '" stroke-width="1.2"><title>' + tt + '</title></circle>';
+          rotulos += this._balaoAcima(cx, cy, mesNomeCompleto(p.mes).slice(0, 3), ORANGE);
+        });
+        el.innerHTML = '<svg width="' + w + '" height="' + altura + '" style="display:block;overflow:visible;">' +
+          '<line x1="' + margemEsq + '" y1="' + margemTopo + '" x2="' + margemEsq + '" y2="' + (altura - margemBaixo) + '" stroke="#e3e5e8" />' +
+          '<line x1="' + margemEsq + '" y1="' + (altura - margemBaixo) + '" x2="' + (w - margemDir) + '" y2="' + (altura - margemBaixo) + '" stroke="#e3e5e8" />' +
+          '<text x="' + (margemEsq + larguraUtil / 2) + '" y="' + (altura - 10) + '" font-size="11" fill="#6c6c6c" text-anchor="middle">' + LABELS[principal] + '</text>' +
+          '<text x="14" y="' + (margemTopo + (altura - margemTopo - margemBaixo) / 2) + '" font-size="11" fill="#6c6c6c" text-anchor="middle" transform="rotate(-90 14,' + (margemTopo + (altura - margemTopo - margemBaixo) / 2) + ')">' + LABELS[secundaria] + '</text>' +
+          pts + rotulos + '</svg>';
+        return;
+      }
+
+      // duas métricas em linha/barra: nunca eixo duplo — reindexa as duas pro
+      // mesmo ponto de partida (=100) pra caber numa única escala vertical.
+      // Os balões continuam mostrando o valor real, nunca o índice.
+      const usaIndice = !!secundaria;
+      const baseP = usaIndice ? (serie.find(p => p[principal] != null) || {})[principal] : null;
+      const baseS = usaIndice ? (serie.find(p => p[secundaria] != null) || {})[secundaria] : null;
+      const valorPlot = (base, v) => (base && v != null) ? (v / base * 100) : v;
+
+      const valsP = serie.map(p => valorPlot(baseP, p[principal])).filter(v => v != null);
+      const valsS = secundaria ? serie.map(p => valorPlot(baseS, p[secundaria])).filter(v => v != null) : [];
+      const todosVals = valsP.concat(valsS).concat([0]);
+      const max = Math.max.apply(null, todosVals), min = Math.min.apply(null, todosVals);
+      const span = (max - min) || 1;
+      const escalaYv = (v) => margemTopo + (altura - margemTopo - margemBaixo) * (1 - (v - min) / span);
+      const passoX = larguraUtil / Math.max(1, serie.length - 1);
+      const escalaXi = (i) => margemEsq + i * passoX;
+
+      let corpo = '', rotulos = '', eixoX = '';
+
+      const desenhaSerie = (metrica, base, cor, offsetBarra) => {
+        const vals = serie.map(p => valorPlot(base, p[metrica]));
+        if (tipo === 'barra_h') {
+          const passoY2 = (altura - margemTopo - margemBaixo) / Math.max(1, serie.length - 1);
+          const nSeries = secundaria ? 2 : 1;
+          const alturaBarra = Math.min(16, passoY2 * .6 / nSeries);
           serie.forEach((p, i) => {
-            if (p[metrica] == null) return;
-            const yCentro = margemTopo + i * passoY2;
-            const largura = (p[metrica] - Math.min(0, min)) / ((max - Math.min(0, min)) || 1) * larguraUtil;
-            corpo += '<rect x="' + margemEsq + '" y="' + (yCentro - alturaBarra / 2) + '" width="' + Math.max(1, largura) + '" height="' + alturaBarra + '" fill="' + cor + '" rx="2"><title>' + titulo(p) + '</title></rect>';
+            const v = vals[i];
+            if (v == null) return;
+            const yCentro = margemTopo + i * passoY2 + offsetBarra * (alturaBarra + 2);
+            const largura = (v - Math.min(0, min)) / ((max - Math.min(0, min)) || 1) * larguraUtil;
+            corpo += '<rect x="' + margemEsq + '" y="' + (yCentro - alturaBarra / 2) + '" width="' + Math.max(1, largura) + '" height="' + alturaBarra + '" fill="' + cor + '" rx="2"><title>' + mesNomeCompleto(p.mes) + ': ' + this._escSvg(this._fmtMetricaAnalise(metrica, p[metrica])) + '</title></rect>';
+            rotulos += this._balaoDireita(margemEsq + largura, yCentro, this._fmtMetricaAnalise(metrica, p[metrica]), cor);
           });
-        } else if (st.anTipoGrafico === 'barra_v') {
-          const largBarra = Math.min(28, larguraUtil / serie.length * .6);
+        } else if (tipo === 'barra_v') {
+          const nSeries = secundaria ? 2 : 1;
+          const largBarra = Math.min(24, larguraUtil / serie.length * .55 / nSeries);
           serie.forEach((p, i) => {
-            if (p[metrica] == null) return;
-            const y0 = escalaYv(Math.max(0, min)), y1 = escalaYv(p[metrica]);
-            const yTop = Math.min(y0, y1), altura = Math.max(1, Math.abs(y1 - y0));
-            corpo += '<rect x="' + (escalaXi(i) - largBarra / 2) + '" y="' + yTop + '" width="' + largBarra + '" height="' + altura + '" fill="' + cor + '" rx="2"><title>' + titulo(p) + '</title></rect>';
+            const v = vals[i];
+            if (v == null) return;
+            const y0 = escalaYv(Math.max(0, min)), y1 = escalaYv(v);
+            const yTop = Math.min(y0, y1), alturaB = Math.max(1, Math.abs(y1 - y0));
+            const xCentro = escalaXi(i) + offsetBarra * (largBarra + 2);
+            corpo += '<rect x="' + (xCentro - largBarra / 2) + '" y="' + yTop + '" width="' + largBarra + '" height="' + alturaB + '" fill="' + cor + '" rx="2"><title>' + mesNomeCompleto(p.mes) + ': ' + this._escSvg(this._fmtMetricaAnalise(metrica, p[metrica])) + '</title></rect>';
+            rotulos += this._balaoAcima(xCentro, yTop, this._fmtMetricaAnalise(metrica, p[metrica]), cor);
           });
-        } else { // linha
-          const pontosLinha = serie.filter(p => p[metrica] != null).map((p) => escalaXi(serie.indexOf(p)) + ',' + escalaYv(p[metrica])).join(' ');
-          corpo += '<polyline points="' + pontosLinha + '" fill="none" stroke="' + cor + '" stroke-width="2" />';
+        } else { // linha ou dispersão de 1 métrica só (pontos soltos, sem traço)
+          if (tipo === 'linha') {
+            const ptsLinha = serie.map((p, i) => vals[i] != null ? escalaXi(i) + ',' + escalaYv(vals[i]) : null).filter(Boolean).join(' ');
+            corpo += '<polyline points="' + ptsLinha + '" fill="none" stroke="' + cor + '" stroke-width="2" />';
+          }
           serie.forEach((p, i) => {
-            if (p[metrica] == null) return;
-            corpo += '<circle cx="' + escalaXi(i) + '" cy="' + escalaYv(p[metrica]) + '" r="3.5" fill="' + cor + '"><title>' + titulo(p) + '</title></circle>';
+            const v = vals[i];
+            if (v == null) return;
+            const cx = escalaXi(i), cy = escalaYv(v);
+            corpo += '<circle cx="' + cx + '" cy="' + cy + '" r="4" fill="' + cor + '"><title>' + mesNomeCompleto(p.mes) + ': ' + this._escSvg(this._fmtMetricaAnalise(metrica, p[metrica])) + '</title></circle>';
+            rotulos += this._balaoAcima(cx, cy, this._fmtMetricaAnalise(metrica, p[metrica]), cor);
           });
         }
-        const eixoX = st.anTipoGrafico === 'barra_h' ? '' : serie.map((p, i) => '<text x="' + escalaXi(i) + '" y="' + (alturaPainel - 6) + '" font-size="9" fill="#A09BA2" text-anchor="middle">' + p.mes.slice(5, 7) + '/' + p.mes.slice(2, 4) + '</text>').join('');
+      };
 
-        html += '<div style="display:flex;flex-direction:column;gap:2px;">' +
-          '<div style="font-size:11.5px;color:#2F323B;font-weight:600;">' + LABELS[metrica] + '</div>' +
-          '<svg width="' + w + '" height="' + alturaPainel + '" style="display:block;">' +
-          '<line x1="' + margemEsq + '" y1="' + margemTopo + '" x2="' + margemEsq + '" y2="' + (alturaPainel - margemBaixo) + '" stroke="#e3e5e8" />' +
-          '<line x1="' + margemEsq + '" y1="' + (alturaPainel - margemBaixo) + '" x2="' + (w - margemDir) + '" y2="' + (alturaPainel - margemBaixo) + '" stroke="#e3e5e8" />' +
-          corpo + eixoX +
-          '</svg></div>';
-      });
-      el.innerHTML = '<div style="display:flex;flex-direction:column;gap:14px;">' + html + '</div>';
+      desenhaSerie(principal, baseP, corP, secundaria ? -1 : 0);
+      if (secundaria) desenhaSerie(secundaria, baseS, corS, 1);
+
+      if (tipo === 'barra_h') {
+        const passoY2b = (altura - margemTopo - margemBaixo) / Math.max(1, serie.length - 1);
+        eixoX = serie.map((p, i) => '<text x="' + (margemEsq - 8) + '" y="' + (margemTopo + i * passoY2b + 4) + '" font-size="10" fill="#6c6c6c" text-anchor="end">' + mesNomeCompleto(p.mes) + '</text>').join('');
+      } else {
+        eixoX = serie.map((p, i) => {
+          const x = escalaXi(i), y = altura - margemBaixo + 16;
+          return '<text x="' + x + '" y="' + y + '" font-size="10" fill="#6c6c6c" text-anchor="end" transform="rotate(-30 ' + x + ',' + y + ')">' + mesNomeCompleto(p.mes) + '</text>';
+        }).join('');
+      }
+
+      const eixoYTitulo = usaIndice ? '<text x="8" y="' + (margemTopo - 12) + '" font-size="10" fill="#A09BA2">Índice (mês inicial = 100)</text>' : '';
+
+      el.innerHTML = '<svg width="' + w + '" height="' + altura + '" style="display:block;overflow:visible;">' +
+        '<line x1="' + margemEsq + '" y1="' + margemTopo + '" x2="' + margemEsq + '" y2="' + (altura - margemBaixo) + '" stroke="#e3e5e8" />' +
+        '<line x1="' + margemEsq + '" y1="' + (altura - margemBaixo) + '" x2="' + (w - margemDir) + '" y2="' + (altura - margemBaixo) + '" stroke="#e3e5e8" />' +
+        eixoYTitulo + corpo + eixoX + rotulos +
+        '</svg>';
       return;
     }
 
@@ -3053,6 +3201,9 @@ class Component extends DCLogic {
       };
     });
 
+    const anAnosAnalise = Array.from(new Set(((st.anSerieTemporal && st.anSerieTemporal.pontos) || []).map(p => p.mes.slice(0, 4))));
+    const anoAnaliseAtual = st.anAno || anAnosAnalise[anAnosAnalise.length - 1] || '';
+
     return {
       nav,
       savedFilters: st.segmentacoesSalvas.map(s => ({
@@ -3160,17 +3311,22 @@ class Component extends DCLogic {
       })),
       anEscopoTempo: st.anEscopo === 'tempo',
       anEscopoClientes: st.anEscopo === 'clientes',
-      anMetricasTempoPills: [
-        { value: 'frota', label: 'Frota' }, { value: 'faturamento', label: 'Faturamento' },
-        { value: 'roic', label: 'ROIC' }, { value: 'empresas', label: 'Empresas' },
-      ].map(m => ({
-        label: m.label,
-        onClick: () => this.onToggleMetricaTempo(m.value),
-        style: 'padding: 6px 12px; border-radius: 999px; font-size: 11.5px; cursor: pointer; border: 1px solid ' +
-          (st.anMetricasTempo.indexOf(m.value) >= 0 ? ORANGE + '; background: #fff6f2; color: ' + ORANGE + '; font-weight: 600;' : '#d8dbdf; background: #fff; color: #6c6c6c;')
-      })),
+      anAnaliseDrops: [
+        this.customDrop('anmetricaprincipal', 'Mostrar', METRICA_TEMPO_ANALISE, st.anMetricaPrincipal, (v) => this.onMudarMetricaTempo('anMetricaPrincipal', v)),
+        this.customDrop(
+          'anmetricasecundaria', 'Cruzar com',
+          [{ value: '', label: 'Nenhuma' }].concat(METRICA_TEMPO_ANALISE.filter(m => m.value !== st.anMetricaPrincipal)),
+          st.anMetricaSecundaria, (v) => this.onMudarMetricaTempo('anMetricaSecundaria', v)
+        ),
+      ],
+      anAnaliseAnoDrop: this.customDrop('ananaliseano', 'Ano', anAnosAnalise.map(a => ({ value: a, label: a })), anoAnaliseAtual, (v) => this.onMudarAnoAnalise(v)),
+      anAnaliseLegend: st.anMetricaSecundaria ? [
+        { label: (METRICA_TEMPO_ANALISE.find(m => m.value === st.anMetricaPrincipal) || {}).label || '', dot: this.dot(COR_METRICA_ANALISE[st.anMetricaPrincipal], 8) },
+        { label: (METRICA_TEMPO_ANALISE.find(m => m.value === st.anMetricaSecundaria) || {}).label || '', dot: this.dot(COR_METRICA_ANALISE[st.anMetricaSecundaria], 8) },
+      ] : [],
       anTipoGraficoTabs: [
-        { value: 'linha', label: 'Linha' }, { value: 'barra_v', label: 'Barra vertical' }, { value: 'barra_h', label: 'Barra horizontal' },
+        { value: 'linha', label: 'Linha' }, { value: 'barra_v', label: 'Barra vertical' },
+        { value: 'barra_h', label: 'Barra horizontal' }, { value: 'dispersao', label: 'Dispersão' },
       ].map(t => ({
         label: t.label,
         onClick: () => this.onMudarTipoGrafico(t.value),
