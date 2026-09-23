@@ -2047,7 +2047,7 @@ class Component extends DCLogic {
     // regional pintam o pol\u00edgono do munic\u00edpio real; no nacional, pintam por UF.
     const regionalFill = regional && chor; // concentração no recorte: pinta o município real
     const regionalContorno = regional && (disp || heat); // usado só pros contornos (linha) de município — calor também usa isso como referência visual, já que a cor dele não vem mais do polígono do município
-    const hasPontos = disp; // dispersão (nacional ou regional): sempre um ponto por município real
+    const hasPontos = disp || heat; // dispersão SEMPRE tem ponto clicável; calor também precisa (mesmos dados de mDispersao), senão clique/hover no brilho não acha nada pra abrir
 
     // polígonos de município reais, casados por nome com o ponto de dispersão (a malha
     // de município não traz o código IBGE, só o nome — por isso a normalização)
@@ -2103,9 +2103,12 @@ class Component extends DCLogic {
     }
 
     let pts = [];
-    if (disp) {
+    if (disp || heat) {
       // dispersão real (nacional ou regional): um ponto por município de verdade, no
-      // lat/lon real — sem amostragem/jitter sintético, cada bolinha é uma localização real
+      // lat/lon real — sem amostragem/jitter sintético, cada bolinha é uma localização real.
+      // Em modo calor, isso NÃO desenha nada sozinho (o pts.forEach de desenho só roda
+      // "if (disp)", mais abaixo) — serve só pra clique/hover acharem o município certo
+      // por baixo do brilho contínuo, que é pré-renderizado à parte (ver heatCanvas).
       const pontos = st.mDispersao || [];
       const rmax = Math.max.apply(null, pontos.map(p => p.valor).concat([1]));
       pts = pontos.map(p => {
@@ -3230,8 +3233,16 @@ class Component extends DCLogic {
       onVoltarMapa: () => {
         const a = st.mVoltarAnterior;
         if (!a) return;
-        this.setState({ mEscopo: a.mEscopo, mUfs: a.mUfs, mRegioes: a.mRegioes, mVoltarAnterior: null });
-        this.carregarEstudoMercado(this.buildFiltroMercado({ modo: a.mEscopo, estados: this.resolveShownUfs(a.mEscopo, a.mUfs, a.mRegioes) }));
+        // limpa município(s) selecionado(s) — "voltar ao mapa completo" é sempre uma
+        // visão MAIS ampla que a atual, nunca faz sentido carregar de volta com um
+        // recorte de município específico ainda grudado. municipios: [] também vai
+        // explícito no buildFiltroMercado (não só no setState) porque o setState é
+        // assíncrono — sem o override explícito, a consulta que sai AGORA ainda leria
+        // o mMunicipios antigo do estado que só vai atualizar no próximo render.
+        this.setState({ mEscopo: a.mEscopo, mUfs: a.mUfs, mRegioes: a.mRegioes, mMunicipios: [], mVoltarAnterior: null });
+        this.carregarEstudoMercado(this.buildFiltroMercado({
+          modo: a.mEscopo, estados: this.resolveShownUfs(a.mEscopo, a.mUfs, a.mRegioes), municipios: []
+        }));
       },
       insights: [
         {
