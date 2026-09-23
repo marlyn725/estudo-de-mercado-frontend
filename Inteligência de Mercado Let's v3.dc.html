@@ -206,6 +206,72 @@ a:hover { opacity: .75; }
                   </sc-for>
                 </div>
               </div>
+
+              <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14.5px; font-weight: 700; color: #000;">Análise</div>
+                  <div style="font-size: 11.5px; color: #A09BA2;">Frota, Faturamento e ROIC — escolha a visão e o tipo de gráfico</div>
+                </div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                  <sc-for list="{{ anEscopoTabs }}" as="t" hint-placeholder-count="2">
+                    <div onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</div>
+                  </sc-for>
+                </div>
+
+                <sc-if value="{{ anEscopoTempo }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <sc-for list="{{ anMetricasTempoPills }}" as="m" hint-placeholder-count="4">
+                          <div onClick="{{ m.onClick }}" style="{{ m.style }}">{{ m.label }}</div>
+                        </sc-for>
+                      </div>
+                      <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                        <sc-for list="{{ anTipoGraficoTabs }}" as="t" hint-placeholder-count="3">
+                          <div onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</div>
+                        </sc-for>
+                      </div>
+                    </div>
+                    <div ref="{{ analiseRef }}" style="width: 100%;"></div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ anEscopoClientes }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                      <div style="{{ anMetricaXDrop.headStyle }}" onClick="{{ anMetricaXDrop.onToggle }}">
+                        <span style="flex: 1; white-space: nowrap;">{{ anMetricaXDrop.summary }}</span>
+                        <span style="color: #A09BA2; font-size: 10px;">{{ anMetricaXDrop.caret }}</span>
+                      </div>
+                      <span style="color: #A09BA2; font-size: 11px;">x</span>
+                      <div style="{{ anMetricaYDrop.headStyle }}" onClick="{{ anMetricaYDrop.onToggle }}">
+                        <span style="flex: 1; white-space: nowrap;">{{ anMetricaYDrop.summary }}</span>
+                        <span style="color: #A09BA2; font-size: 10px;">{{ anMetricaYDrop.caret }}</span>
+                      </div>
+                      <sc-if value="{{ anMetricaXDrop.open }}" hint-placeholder-val="{{ false }}">
+                        <div style="position: relative;">
+                          <div style="position: absolute; top: 4px; left: 0; min-width: 190px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); padding: 6px; z-index: 30;">
+                            <sc-for list="{{ anMetricaXDrop.items }}" as="i" hint-placeholder-count="3">
+                              <div onClick="{{ i.onClick }}" style="{{ i.style }}"><div style="{{ i.box }}"></div><span style="flex: 1;">{{ i.label }}</span></div>
+                            </sc-for>
+                          </div>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ anMetricaYDrop.open }}" hint-placeholder-val="{{ false }}">
+                        <div style="position: relative;">
+                          <div style="position: absolute; top: 4px; left: 0; min-width: 190px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); padding: 6px; z-index: 30;">
+                            <sc-for list="{{ anMetricaYDrop.items }}" as="i" hint-placeholder-count="3">
+                              <div onClick="{{ i.onClick }}" style="{{ i.style }}"><div style="{{ i.box }}"></div><span style="flex: 1;">{{ i.label }}</span></div>
+                            </sc-for>
+                          </div>
+                        </div>
+                      </sc-if>
+                      <span style="font-size: 11px; color: #A09BA2;">{{ anComparacaoMes }} · {{ anComparacaoTotalPontos }} cliente(s) com as duas métricas</span>
+                    </div>
+                    <div ref="{{ analiseRef }}" style="width: 100%;"></div>
+                  </div>
+                </sc-if>
+              </div>
             </div>
 
             <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; overflow: hidden;">
@@ -1114,6 +1180,11 @@ const METRICA_MAPA_DASH = [
   { value: 'veiculos', label: 'Veículos por estado' }
 ];
 const PALETA_SERIES = [ORANGE, '#2b6cb0', '#21a35a', '#8b5cf6', '#e2b93b', '#6c6c6c', '#c2185b', '#00838f'];
+const METRICA_COMPARACAO_ANALISE = [
+  { value: 'frota', label: 'Frota (veículos)' },
+  { value: 'faturamento', label: 'Faturamento (R$)' },
+  { value: 'roic', label: 'ROIC' }
+];
 
 const CONF = {
   g: { color: '#21a35a', label: 'Confirmado por fonte oficial atualizada' },
@@ -1138,6 +1209,12 @@ function fmtDataBr(iso) {
   const [y, m, d] = iso.split('-');
   return d + '/' + m + '/' + y;
 }
+const MESES_ABREV = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+function fmtMesAno(iso) {
+  if (!iso) return '—';
+  const [y, m] = iso.split('-');
+  return MESES_ABREV[parseInt(m, 10) - 1] + '/' + y;
+}
 function fmtHora(iso) {
   if (!iso) return '';
   try { return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
@@ -1157,11 +1234,25 @@ class Component extends DCLogic {
     super(props);
     this.mapRef = React.createRef();
     this.dashMapRef = React.createRef();
+    this.analiseRef = React.createRef();
     this.state = {
       screen: 'dashboard',
       dashboard: null,
       cargaAberta: false,
       cargaArquivo: null,
+      // gráfico configurável (tipo ClevertTap) de Frota/Faturamento/ROIC/Empresas —
+      // "tempo" nunca tem mais que ~7 pontos (um por mês), então qualquer
+      // combinação de métricas cabe; "clientes" pode ter centenas de pontos, por
+      // isso só existe como dispersão (nunca linha/barra nomeada por cliente)
+      anEscopo: 'tempo',
+      anMetricasTempo: ['frota', 'faturamento'],
+      anTipoGrafico: 'linha',
+      anMetricaX: 'frota',
+      anMetricaY: 'roic',
+      anSerieTemporal: null,
+      anComparacao: null,
+      anCarregando: false,
+      anExportandoRelatorio: false,
       cargaMes: '',
       cargaEnviando: false,
       cargaResultado: null,
@@ -1280,6 +1371,8 @@ class Component extends DCLogic {
     this.tryDrawDashMap();
     this.carregarCruzamento();
     this.carregarContratosVencendo(this.state.dashVencendoDias);
+    this.carregarSerieTemporal();
+    this.carregarComparacaoClientes();
     this._outside = () => {
       const st = this.state;
       if (st.open || st.cnaeListOpen || st.mCnaeListOpen || st.setorListOpen || st.mSetorListOpen || st.mMunicipioListOpen || st.mMesorregiaoListOpen) {
@@ -1293,7 +1386,7 @@ class Component extends DCLogic {
   }
   componentDidUpdate(p) {
     if (this.state.screen === 'mercado') this.tryDrawMap();
-    if (this.state.screen === 'dashboard') this.tryDrawDashMap();
+    if (this.state.screen === 'dashboard') { this.tryDrawDashMap(); this.tryDrawAnaliseChart(); }
   }
   componentWillUnmount() { clearTimeout(this._enrichPoll); clearTimeout(this._m); clearTimeout(this._estT); clearTimeout(this._estM); clearTimeout(this._cnpjT); clearTimeout(this._cnaeT); clearTimeout(this._mCnaeT); document.removeEventListener('click', this._outside); }
 
@@ -1366,6 +1459,163 @@ class Component extends DCLogic {
     });
     svg += '</svg>';
     el.innerHTML = svg;
+  }
+
+  /* ---------- dashboard: análise configurável (tempo / entre clientes) ---------- */
+  carregarSerieTemporal() {
+    apiGet('/api/dashboard/serie-temporal')
+      .then(r => this.setState({ anSerieTemporal: r }))
+      .catch(e => this.setState({ apiError: 'Não foi possível carregar a série temporal: ' + e.message }));
+  }
+
+  carregarComparacaoClientes() {
+    const st = this.state;
+    this.setState({ anCarregando: true });
+    apiGet('/api/dashboard/comparacao-clientes?metrica_x=' + st.anMetricaX + '&metrica_y=' + st.anMetricaY)
+      .then(r => this.setState({ anComparacao: r, anCarregando: false }))
+      .catch(e => this.setState({ anCarregando: false, apiError: 'Não foi possível carregar a comparação: ' + e.message }));
+  }
+
+  onMudarEscopoAnalise(escopo) {
+    this.setState({ anEscopo: escopo });
+  }
+
+  // "tempo" aceita quantas métricas quiser marcadas (nunca mais que ~7 pontos no
+  // eixo X, cabe qualquer combinação) — "clientes" é sempre X/Y único, nunca
+  // multi-seleção, porque vira um ponto por empresa (poderia ser centenas).
+  onToggleMetricaTempo(metrica) {
+    const atuais = this.state.anMetricasTempo.slice();
+    const i = atuais.indexOf(metrica);
+    if (i >= 0) atuais.splice(i, 1); else atuais.push(metrica);
+    this.setState({ anMetricasTempo: atuais });
+  }
+
+  onMudarTipoGrafico(tipo) {
+    this.setState({ anTipoGrafico: tipo });
+  }
+
+  onMudarMetricaComparacao(eixo, valor) {
+    this.setState({ [eixo]: valor }, () => this.carregarComparacaoClientes());
+  }
+
+  _escSvg(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  _fmtMetricaAnalise(metrica, v) {
+    if (v == null) return '—';
+    if (metrica === 'faturamento') return fmtMoedaAbrev(v);
+    if (metrica === 'roic') return (v * 100).toFixed(1) + '%';
+    return fmtInt(Math.round(v));
+  }
+
+  tryDrawAnaliseChart() {
+    const el = this.analiseRef.current;
+    if (!el || !window.d3) { clearTimeout(this._an); this._an = setTimeout(() => this.tryDrawAnaliseChart(), 200); return; }
+    const st = this.state;
+    const key = [
+      st.anEscopo, st.anMetricasTempo.join(','), st.anTipoGrafico, st.anMetricaX, st.anMetricaY,
+      el.clientWidth, JSON.stringify(st.anSerieTemporal), JSON.stringify(st.anComparacao),
+    ].join('|');
+    if (el.dataset.key === key) return;
+    el.dataset.key = key;
+    this.paintAnaliseChart(el);
+  }
+
+  paintAnaliseChart(el) {
+    const st = this.state;
+    const w = el.clientWidth || 600;
+    // cor por métrica em ordem fixa (nunca muda conforme o que está selecionado —
+    // faturamento é sempre azul, não importa se é a 1ª ou a 3ª métrica marcada)
+    const CORES = { frota: '#F15A22', faturamento: '#2B6CB0', roic: '#2F9E44', empresas: '#7048E8' };
+    const LABELS = { frota: 'Frota (veículos)', faturamento: 'Faturamento (R$)', roic: 'ROIC (mediana)', empresas: 'Empresas atendidas' };
+
+    if (st.anEscopo === 'tempo') {
+      const serie = (st.anSerieTemporal && st.anSerieTemporal.pontos) || [];
+      if (!serie.length || !st.anMetricasTempo.length) {
+        el.innerHTML = '<div style="padding:16px 4px;color:#A09BA2;font-size:12px;">Selecione ao menos uma métrica.</div>';
+        return;
+      }
+      const alturaPainel = 130, margemEsq = 58, margemDir = 16, margemTopo = 16, margemBaixo = 24;
+      const larguraUtil = w - margemEsq - margemDir;
+      let html = '';
+      st.anMetricasTempo.forEach(metrica => {
+        const vals = serie.map(p => p[metrica]).filter(v => v != null);
+        const max = Math.max.apply(null, vals.concat([0]));
+        const min = Math.min.apply(null, vals.concat([0]));
+        const span = (max - min) || 1;
+        const escalaYv = (v) => margemTopo + (alturaPainel - margemTopo - margemBaixo) * (1 - (v - min) / span);
+        const passoX = larguraUtil / Math.max(1, serie.length - 1);
+        const escalaXi = (i) => margemEsq + i * passoX;
+        const cor = CORES[metrica] || '#6c6c6c';
+        const titulo = (p) => this._escSvg(p.mes) + ': ' + this._escSvg(this._fmtMetricaAnalise(metrica, p[metrica]));
+
+        let corpo = '';
+        if (st.anTipoGrafico === 'barra_h') {
+          const passoY2 = (alturaPainel - margemTopo - margemBaixo) / Math.max(1, serie.length - 1);
+          const alturaBarra = Math.min(16, passoY2 * .6);
+          serie.forEach((p, i) => {
+            if (p[metrica] == null) return;
+            const yCentro = margemTopo + i * passoY2;
+            const largura = (p[metrica] - Math.min(0, min)) / ((max - Math.min(0, min)) || 1) * larguraUtil;
+            corpo += '<rect x="' + margemEsq + '" y="' + (yCentro - alturaBarra / 2) + '" width="' + Math.max(1, largura) + '" height="' + alturaBarra + '" fill="' + cor + '" rx="2"><title>' + titulo(p) + '</title></rect>';
+          });
+        } else if (st.anTipoGrafico === 'barra_v') {
+          const largBarra = Math.min(28, larguraUtil / serie.length * .6);
+          serie.forEach((p, i) => {
+            if (p[metrica] == null) return;
+            const y0 = escalaYv(Math.max(0, min)), y1 = escalaYv(p[metrica]);
+            const yTop = Math.min(y0, y1), altura = Math.max(1, Math.abs(y1 - y0));
+            corpo += '<rect x="' + (escalaXi(i) - largBarra / 2) + '" y="' + yTop + '" width="' + largBarra + '" height="' + altura + '" fill="' + cor + '" rx="2"><title>' + titulo(p) + '</title></rect>';
+          });
+        } else { // linha
+          const pontosLinha = serie.filter(p => p[metrica] != null).map((p) => escalaXi(serie.indexOf(p)) + ',' + escalaYv(p[metrica])).join(' ');
+          corpo += '<polyline points="' + pontosLinha + '" fill="none" stroke="' + cor + '" stroke-width="2" />';
+          serie.forEach((p, i) => {
+            if (p[metrica] == null) return;
+            corpo += '<circle cx="' + escalaXi(i) + '" cy="' + escalaYv(p[metrica]) + '" r="3.5" fill="' + cor + '"><title>' + titulo(p) + '</title></circle>';
+          });
+        }
+        const eixoX = st.anTipoGrafico === 'barra_h' ? '' : serie.map((p, i) => '<text x="' + escalaXi(i) + '" y="' + (alturaPainel - 6) + '" font-size="9" fill="#A09BA2" text-anchor="middle">' + p.mes.slice(5, 7) + '/' + p.mes.slice(2, 4) + '</text>').join('');
+
+        html += '<div style="display:flex;flex-direction:column;gap:2px;">' +
+          '<div style="font-size:11.5px;color:#2F323B;font-weight:600;">' + LABELS[metrica] + '</div>' +
+          '<svg width="' + w + '" height="' + alturaPainel + '" style="display:block;">' +
+          '<line x1="' + margemEsq + '" y1="' + margemTopo + '" x2="' + margemEsq + '" y2="' + (alturaPainel - margemBaixo) + '" stroke="#e3e5e8" />' +
+          '<line x1="' + margemEsq + '" y1="' + (alturaPainel - margemBaixo) + '" x2="' + (w - margemDir) + '" y2="' + (alturaPainel - margemBaixo) + '" stroke="#e3e5e8" />' +
+          corpo + eixoX +
+          '</svg></div>';
+      });
+      el.innerHTML = '<div style="display:flex;flex-direction:column;gap:14px;">' + html + '</div>';
+      return;
+    }
+
+    // modo "comparação entre clientes" — sempre dispersão, nunca linha/barra (dá
+    // pra ter centenas de pontos, uma barra/linha por empresa seria ilegível)
+    const pontos = (st.anComparacao && st.anComparacao.pontos) || [];
+    const h = 340, margem = 44;
+    if (!pontos.length) {
+      el.innerHTML = '<div style="padding:16px 4px;color:#A09BA2;font-size:12px;">Sem clientes com as duas métricas casadas nesse mês.</div>';
+      return;
+    }
+    const xs = pontos.map(p => p.x), ys = pontos.map(p => p.y);
+    const xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs);
+    const yMin = Math.min.apply(null, ys), yMax = Math.max.apply(null, ys);
+    const escalaX = (v) => margem + (w - margem * 2) * ((v - xMin) / ((xMax - xMin) || 1));
+    const escalaY = (v) => h - margem - (h - margem * 2) * ((v - yMin) / ((yMax - yMin) || 1));
+    let pts = '';
+    pontos.forEach(p => {
+      const tt = this._escSvg(p.cliente) + (p.uf ? ' (' + this._escSvg(p.uf) + ')' : '') +
+        '&#10;' + LABELS[st.anMetricaX] + ': ' + this._escSvg(this._fmtMetricaAnalise(st.anMetricaX, p.x)) +
+        '&#10;' + LABELS[st.anMetricaY] + ': ' + this._escSvg(this._fmtMetricaAnalise(st.anMetricaY, p.y));
+      pts += '<circle cx="' + escalaX(p.x) + '" cy="' + escalaY(p.y) + '" r="4.5" fill="#F15A22" fill-opacity="0.6" stroke="#F15A22" stroke-width="1"><title>' + tt + '</title></circle>';
+    });
+    el.innerHTML = '<svg width="' + w + '" height="' + h + '" style="display:block;">' +
+      '<line x1="' + margem + '" y1="' + margem + '" x2="' + margem + '" y2="' + (h - margem) + '" stroke="#e3e5e8" />' +
+      '<line x1="' + margem + '" y1="' + (h - margem) + '" x2="' + (w - margem) + '" y2="' + (h - margem) + '" stroke="#e3e5e8" />' +
+      '<text x="' + (w / 2) + '" y="' + (h - 8) + '" font-size="11" fill="#6c6c6c" text-anchor="middle">' + LABELS[st.anMetricaX] + '</text>' +
+      '<text x="16" y="' + (h / 2) + '" font-size="11" fill="#6c6c6c" text-anchor="middle" transform="rotate(-90 16,' + (h / 2) + ')">' + LABELS[st.anMetricaY] + '</text>' +
+      pts + '</svg>';
   }
 
   /* ---------- dashboard: cruzamento configurável ---------- */
@@ -1838,6 +2088,16 @@ class Component extends DCLogic {
     apiPost('/api/mercado/exportar-estudo', this.buildFiltroMercado())
       .then(r => window.open(API_BASE + '/api/exportacoes/' + r.export_id + '/arquivo', '_blank'))
       .catch(e => this.setState({ apiError: 'Não foi possível gerar o PDF: ' + e.message }));
+  }
+
+  exportarRelatorioDashboard() {
+    this.setState({ anExportandoRelatorio: true });
+    apiPost('/api/dashboard/exportar-relatorio', {})
+      .then(r => {
+        window.open(API_BASE + '/api/exportacoes/' + r.export_id + '/arquivo', '_blank');
+        this.setState({ anExportandoRelatorio: false });
+      })
+      .catch(e => this.setState({ anExportandoRelatorio: false, apiError: 'Não foi possível gerar o relatório: ' + e.message }));
   }
 
   // clicar num estado no mapa NACIONAL não deve abrir a lista de empresas direto —
@@ -2710,7 +2970,10 @@ class Component extends DCLogic {
     }[st.screen];
 
     const headerActions = {
-      dashboard: [{ label: 'Recarregar dados da Let\'s', hint: 'Envia uma nova planilha da carteira', primary: true, onClick: () => this.setState({ cargaAberta: !st.cargaAberta }) }],
+      dashboard: [
+        { label: 'Recarregar dados da Let\'s', hint: 'Envia uma nova planilha da carteira', primary: true, onClick: () => this.setState({ cargaAberta: !st.cargaAberta }) },
+        { label: st.anExportandoRelatorio ? 'Gerando…' : 'Exportar relatório completo (PDF)', hint: 'KPIs, rankings e evolução mensal da carteira', onClick: () => this.exportarRelatorioDashboard() }
+      ],
       busca: [{ label: 'Limpar critérios', onClick: () => { this.setState({ ufs: [], cnaes: [], sits: [], portes: [], searched: false, buscaResultado: null, selected: [] }); this.recalcularEstimativa(); } }],
       mercado: [{ label: 'Exportar estudo (PDF)', hint: 'Gera o dossiê do recorte atual', onClick: () => this.exportarEstudoPdf() }]
     }[st.screen] || [];
@@ -2883,6 +3146,41 @@ class Component extends DCLogic {
       dashCruzLegend: (st.dashCruz && st.dashCruz.series || []).map((s, i) => ({
         label: s, dot: this.dot(PALETA_SERIES[i % PALETA_SERIES.length], 8)
       })),
+
+      /* análise configurável (Frota/Faturamento/ROIC/Empresas) */
+      analiseRef: this.analiseRef,
+      anEscopoTabs: [
+        { value: 'tempo', label: 'Evolução no tempo' },
+        { value: 'clientes', label: 'Comparação entre clientes' },
+      ].map(t => ({
+        label: t.label,
+        onClick: () => this.onMudarEscopoAnalise(t.value),
+        style: 'padding: 7px 14px; border-radius: 999px; font-size: 12px; cursor: pointer; white-space: nowrap; ' +
+          (st.anEscopo === t.value ? 'background: ' + ORANGE + '; color: #fff; font-weight: 600;' : 'background: #eef0f2; color: #6c6c6c;')
+      })),
+      anEscopoTempo: st.anEscopo === 'tempo',
+      anEscopoClientes: st.anEscopo === 'clientes',
+      anMetricasTempoPills: [
+        { value: 'frota', label: 'Frota' }, { value: 'faturamento', label: 'Faturamento' },
+        { value: 'roic', label: 'ROIC' }, { value: 'empresas', label: 'Empresas' },
+      ].map(m => ({
+        label: m.label,
+        onClick: () => this.onToggleMetricaTempo(m.value),
+        style: 'padding: 6px 12px; border-radius: 999px; font-size: 11.5px; cursor: pointer; border: 1px solid ' +
+          (st.anMetricasTempo.indexOf(m.value) >= 0 ? ORANGE + '; background: #fff6f2; color: ' + ORANGE + '; font-weight: 600;' : '#d8dbdf; background: #fff; color: #6c6c6c;')
+      })),
+      anTipoGraficoTabs: [
+        { value: 'linha', label: 'Linha' }, { value: 'barra_v', label: 'Barra vertical' }, { value: 'barra_h', label: 'Barra horizontal' },
+      ].map(t => ({
+        label: t.label,
+        onClick: () => this.onMudarTipoGrafico(t.value),
+        style: 'padding: 6px 12px; border-radius: 6px; font-size: 11.5px; cursor: pointer; ' +
+          (st.anTipoGrafico === t.value ? 'background: #2F323B; color: #fff; font-weight: 600;' : 'background: #eef0f2; color: #6c6c6c;')
+      })),
+      anMetricaXDrop: this.customDrop('anmetricax', 'Eixo X', METRICA_COMPARACAO_ANALISE, st.anMetricaX, (v) => this.onMudarMetricaComparacao('anMetricaX', v)),
+      anMetricaYDrop: this.customDrop('anmetricay', 'Eixo Y', METRICA_COMPARACAO_ANALISE, st.anMetricaY, (v) => this.onMudarMetricaComparacao('anMetricaY', v)),
+      anComparacaoMes: st.anComparacao ? fmtMesAno(st.anComparacao.mes) : '',
+      anComparacaoTotalPontos: st.anComparacao ? st.anComparacao.pontos.length : 0,
       dashVencendoDrop: this.customDrop(
         'dashvencendodias', 'Janela',
         [{ value: 30, label: '30 dias' }, { value: 60, label: '60 dias' }, { value: 90, label: '90 dias' }],
