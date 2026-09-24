@@ -1314,6 +1314,7 @@ class Component extends DCLogic {
       sits: ['02'],
       portes: [],
       cnaes: [],
+      cnaeSecundario: false,
       matrizFilial: [],
       regionais: [],
       municipiosHerdados: [],
@@ -1961,6 +1962,7 @@ class Component extends DCLogic {
     const st = this.state;
     return {
       ufs: st.ufs, situacoes: st.sits, portes: st.portes, cnaes: st.cnaes,
+      cnaes_incluir_secundario: st.cnaeSecundario,
       matriz_filial: st.matrizFilial, regionais: st.regionais, municipios: st.municipiosHerdados
     };
   }
@@ -2176,6 +2178,7 @@ class Component extends DCLogic {
     this.setState({
       savedActive: seg.nome, screen: 'busca', open: null,
       ufs: f.ufs, sits: f.situacoes, portes: f.portes, cnaes: f.cnaes,
+      cnaeSecundario: f.cnaes_incluir_secundario || false,
       matrizFilial: f.matriz_filial || [], regionais: f.regionais || [], municipiosHerdados: f.municipios || []
     });
     this.backfillCnaeCache(f.cnaes, 'cnaeCache');
@@ -2222,7 +2225,8 @@ class Component extends DCLogic {
       .then(filtroBusca => {
         this.setState({
           screen: 'busca', open: null, ufs: filtroBusca.ufs, sits: filtroBusca.situacoes,
-          portes: filtroBusca.portes, cnaes: filtroBusca.cnaes, matrizFilial: filtroBusca.matriz_filial || [],
+          portes: filtroBusca.portes, cnaes: filtroBusca.cnaes, cnaeSecundario: filtroBusca.cnaes_incluir_secundario || false,
+          matrizFilial: filtroBusca.matriz_filial || [],
           regionais: filtroBusca.regionais || [], municipiosHerdados: filtroBusca.municipios || []
         });
         this.backfillCnaeCache(filtroBusca.cnaes, 'cnaeCache');
@@ -3122,7 +3126,7 @@ class Component extends DCLogic {
         { label: 'Recarregar dados da Let\'s', hint: 'Envia uma nova planilha da carteira', primary: true, onClick: () => this.setState({ cargaAberta: !st.cargaAberta }) },
         { label: st.anExportandoRelatorio ? 'Gerando…' : 'Exportar relatório completo (PDF)', hint: 'KPIs, rankings e evolução mensal da carteira', onClick: () => this.exportarRelatorioDashboard() }
       ],
-      busca: [{ label: 'Limpar critérios', onClick: () => { this.setState({ ufs: [], cnaes: [], sits: [], portes: [], searched: false, buscaResultado: null, selected: [] }); this.recalcularEstimativa(); } }],
+      busca: [{ label: 'Limpar critérios', onClick: () => { this.setState({ ufs: [], cnaes: [], cnaeSecundario: false, sits: [], portes: [], searched: false, buscaResultado: null, selected: [] }); this.recalcularEstimativa(); } }],
       mercado: [{ label: 'Exportar estudo (PDF)', hint: 'Gera o dossiê do recorte atual', onClick: () => this.exportarEstudoPdf() }]
     }[st.screen] || [];
 
@@ -3409,13 +3413,13 @@ class Component extends DCLogic {
         const on = st.cnaes.indexOf(c.codigo) >= 0;
         return {
           code: c.codigo, desc: c.descricao, count: fmtInt(c.qtd_estabelecimentos),
-          onClick: (e) => { e.stopPropagation(); this.toggle('cnaes', c.codigo); this.agendarEstimativa(); }, box: this.box(on), tick: on ? '✓' : '',
+          onClick: (e) => { e.stopPropagation(); this.toggle('cnaes', c.codigo); this.setState({ cnaeSecundario: false }); this.agendarEstimativa(); }, box: this.box(on), tick: on ? '✓' : '',
           style: 'display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 5px; cursor: pointer; background: ' + (on ? '#fff6f2' : 'transparent') + ';'
         };
       }),
       cnaePills: st.cnaes.map(codigo => ({
         label: codigo + (st.cnaeCache[codigo] ? ' · ' + st.cnaeCache[codigo] : ''),
-        onClick: (e) => { e.stopPropagation(); this.toggle('cnaes', codigo); this.agendarEstimativa(); }
+        onClick: (e) => { e.stopPropagation(); this.toggle('cnaes', codigo); this.setState({ cnaeSecundario: false }); this.agendarEstimativa(); }
       })),
       setorQuery: st.setorQuery,
       setorCaret: st.setorListOpen ? '▴' : '▾',
@@ -3424,7 +3428,7 @@ class Component extends DCLogic {
       setorListOpen: st.setorListOpen,
       setorList: (st.setorResults || []).map(s => ({
         code: s.codigo, desc: s.descricao,
-        onClick: (e) => { e.stopPropagation(); this.escolherSetor(s.codigo, 'cnaes', 'setorQuery', 'setorListOpen', 'setorResults', 'cnaeCache', () => this.agendarEstimativa()); }
+        onClick: (e) => { e.stopPropagation(); this.setState({ cnaeSecundario: false }); this.escolherSetor(s.codigo, 'cnaes', 'setorQuery', 'setorListOpen', 'setorResults', 'cnaeCache', () => this.agendarEstimativa()); }
       })),
       estimateLabel: st.buscaEstimativa ? fmtInt(st.buscaEstimativa.total) : '—',
       activeCriteria: st.buscaEstimativa ? st.buscaEstimativa.criterios_ativos : [
