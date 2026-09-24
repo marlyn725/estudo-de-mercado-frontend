@@ -520,6 +520,27 @@ a:hover { opacity: .75; }
                   </sc-for>
                 </div>
 
+                <div data-dd="perfilbusca" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 6;">
+                  <div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Perfil salvo (atalho — preenche todos os filtros de uma vez, igual ao estudo de Mercado)</div>
+                  <div onClick="{{ buscaPerfilDrop.onToggle }}" style="{{ buscaPerfilDrop.headStyle }}">
+                    <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ buscaPerfilDrop.summary }}</span>
+                    <span style="color: #A09BA2; font-size: 10px;">{{ buscaPerfilDrop.caret }}</span>
+                  </div>
+                  <sc-if value="{{ buscaPerfilDrop.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 220px; overflow: auto; padding: 6px; z-index: 30;">
+                      <sc-for list="{{ buscaPerfilDrop.items }}" as="i" hint-placeholder-count="3">
+                        <div onClick="{{ i.onClick }}" style="{{ i.style }}">
+                          <div style="{{ i.box }}"></div>
+                          <span style="flex: 1;">{{ i.label }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ buscaPerfilVazio }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size: 11px; color: #A09BA2;">Nenhum perfil salvo ainda — salve um em "Inteligência de mercado".</div>
+                  </sc-if>
+                </div>
+
                 <div data-dd="setor" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 5;">
                   <div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Setor (atalho — adiciona vários CNAEs de uma vez)</div>
                   <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 9px 12px; background: #fff;">
@@ -655,6 +676,9 @@ a:hover { opacity: .75; }
                     <span>Selecionar tudo</span>
                   </div>
                   <div style="font-size: 12.5px; color: #6c6c6c;">{{ selectionLabel }}</div>
+                  <sc-if value="{{ hasSelecao }}" hint-placeholder-val="{{ false }}">
+                    <div onClick="{{ onLimparSelecao }}" style="font-size: 12px; color: #F15A22; cursor: pointer; text-decoration: underline;">Limpar seleção</div>
+                  </sc-if>
                   <div style="flex: 1;"></div>
                   <div style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: #6c6c6c;">
                     <div style="width: 9px; height: 9px; border-radius: 2px; background: #F15A22;"></div>
@@ -2176,7 +2200,7 @@ class Component extends DCLogic {
   aplicarSegmentacao(seg) {
     const f = seg.filtro;
     this.setState({
-      savedActive: seg.nome, screen: 'busca', open: null,
+      savedActive: seg.nome, screen: 'busca', open: null, selected: [],
       ufs: f.ufs, sits: f.situacoes, portes: f.portes, cnaes: f.cnaes,
       cnaeSecundario: f.cnaes_incluir_secundario || false,
       matrizFilial: f.matriz_filial || [], regionais: f.regionais || [], municipiosHerdados: f.municipios || []
@@ -2221,19 +2245,31 @@ class Component extends DCLogic {
   }
 
   gerarListaDoPerfil() {
-    apiPost('/api/mercado/gerar-lista', this.buildFiltroMercado())
+    this.aplicarFiltroMercadoNaBusca(this.buildFiltroMercado(), '');
+  }
+
+  // atalho "Perfil salvo" dentro da própria tela de Busca — mesma tradução do
+  // "Gerar lista deste perfil" do estudo de Mercado, mas a partir de um perfil
+  // já salvo (perfil.filtro), sem precisar ir até a tela de Mercado antes.
+  aplicarPerfilNaBusca(perfil) {
+    this.aplicarFiltroMercadoNaBusca(perfil.filtro, perfil.nome);
+  }
+
+  aplicarFiltroMercadoNaBusca(filtroMercado, nomePerfil) {
+    apiPost('/api/mercado/gerar-lista', filtroMercado)
       .then(filtroBusca => {
         this.setState({
           screen: 'busca', open: null, ufs: filtroBusca.ufs, sits: filtroBusca.situacoes,
           portes: filtroBusca.portes, cnaes: filtroBusca.cnaes, cnaeSecundario: filtroBusca.cnaes_incluir_secundario || false,
           matrizFilial: filtroBusca.matriz_filial || [],
-          regionais: filtroBusca.regionais || [], municipiosHerdados: filtroBusca.municipios || []
+          regionais: filtroBusca.regionais || [], municipiosHerdados: filtroBusca.municipios || [],
+          savedActive: nomePerfil, selected: []
         });
         this.backfillCnaeCache(filtroBusca.cnaes, 'cnaeCache');
         this.recalcularEstimativa();
         this.executarBusca(1);
       })
-      .catch(e => this.setState({ apiError: 'Não foi possível gerar a lista: ' + e.message }));
+      .catch(e => this.setState({ apiError: 'Não foi possível aplicar o perfil: ' + e.message }));
   }
 
   exportarEstudoPdf() {
@@ -3404,6 +3440,13 @@ class Component extends DCLogic {
         this.dropdown('tipoestab', 'Matriz / filial', 'vazio = ambos — evita contar filiais da mesma empresa como empresas distintas', (st.domTiposEstab || []).map(t => ({ value: t.codigo, label: t.descricao })), 'matrizFilial', () => this.agendarEstimativa()),
         this.dropdown('reg', 'Regional', 'vazio = todas — território comercial da Let\'s', (st.domRegionais || []).map(r => ({ value: r.codigo, label: r.descricao })), 'regionais', () => this.agendarEstimativa())
       ],
+      buscaPerfilDrop: this.customDrop(
+        'perfilbusca', 'Perfil salvo',
+        st.perfisSalvos.map(p => ({ value: p.id, label: p.nome })),
+        '',
+        (id) => { const p = st.perfisSalvos.find(x => x.id === id); if (p) this.aplicarPerfilNaBusca(p); }
+      ),
+      buscaPerfilVazio: !st.perfisSalvos.length,
       cnaeQuery: st.cnaeQuery,
       cnaeCaret: st.cnaeListOpen ? '▴' : '▾',
       onToggleCnae: (e) => { e.stopPropagation(); this.setState({ cnaeListOpen: !st.cnaeListOpen, open: null }); },
@@ -3460,6 +3503,8 @@ class Component extends DCLogic {
         else { const merged = st.selected.slice(); pageCnpjs.forEach(cnpj => { if (merged.indexOf(cnpj) < 0) merged.push(cnpj); }); this.setState({ selected: merged }); }
       },
       selectionLabel: st.selected.length ? st.selected.length + ' selecionada(s)' : 'Nenhuma linha selecionada',
+      hasSelecao: st.selected.length > 0,
+      onLimparSelecao: () => this.setState({ selected: [], exportOpen: false }),
       onOpenExport: () => { if (st.selected.length) this.setState({ exportOpen: !st.exportOpen }); },
       exportOpen: st.exportOpen && st.selected.length > 0,
       exportBtnStyle: 'padding: 10px 18px; border-radius: 999px; font-size: 12.5px; white-space: nowrap; ' +
