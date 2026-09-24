@@ -3495,7 +3495,7 @@ class Component extends DCLogic {
       setorListOpen: st.setorListOpen,
       setorList: (st.setorResults || []).map(s => ({
         code: s.codigo, desc: s.descricao,
-        onClick: (e) => { e.stopPropagation(); this.setState({ cnaeSecundario: false }); this.escolherSetor(s.codigo, 'cnaes', 'setorQuery', 'setorListOpen', 'setorResults', 'cnaeCache', () => this.agendarEstimativa()); }
+        onClick: (e) => { e.stopPropagation(); this.setState({ cnaeSecundario: true }); this.escolherSetor(s.codigo, 'cnaes', 'setorQuery', 'setorListOpen', 'setorResults', 'cnaeCache', () => this.agendarEstimativa()); }
       })),
       estimateLabel: st.buscaEstimativa ? fmtInt(st.buscaEstimativa.total) : '—',
       activeCriteria: st.buscaEstimativa ? st.buscaEstimativa.criterios_ativos : [
