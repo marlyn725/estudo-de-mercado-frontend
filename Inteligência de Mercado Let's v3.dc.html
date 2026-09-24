@@ -673,8 +673,11 @@ a:hover { opacity: .75; }
                   <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000;">{{ resultTitle }}</div>
                   <div onClick="{{ onToggleAll }}" style="display: flex; align-items: center; gap: 9px; cursor: pointer; font-size: 12.5px; color: #2F323B; font-weight: 600;">
                     <div style="{{ allBox }}">{{ allTick }}</div>
-                    <span>Selecionar tudo</span>
+                    <span>Selecionar página</span>
                   </div>
+                  <sc-if value="{{ mostrarSelecionarTodos }}" hint-placeholder-val="{{ false }}">
+                    <div onClick="{{ onSelecionarTodosResultados }}" style="font-size: 12.5px; color: #F15A22; cursor: pointer; font-weight: 600;">{{ selecionarTodosLabel }}</div>
+                  </sc-if>
                   <div style="font-size: 12.5px; color: #6c6c6c;">{{ selectionLabel }}</div>
                   <sc-if value="{{ hasSelecao }}" hint-placeholder-val="{{ false }}">
                     <div onClick="{{ onLimparSelecao }}" style="font-size: 12px; color: #F15A22; cursor: pointer; text-decoration: underline;">Limpar seleção</div>
@@ -691,6 +694,11 @@ a:hover { opacity: .75; }
                   <div onClick="{{ onOpenExport }}" style="{{ exportBtnStyle }}">Exportar seleção</div>
                   <div onClick="{{ onEnriquecer }}" title="{{ enrichHint }}" style="{{ enrichBtnStyle }}">Enriquecer dados</div>
                 </div>
+                <sc-if value="{{ hasSelecaoTruncada }}" hint-placeholder-val="{{ false }}">
+                  <div style="background: #fff6f2; border-bottom: 1px solid #e3e5e8; padding: 8px 18px; font-size: 11.5px; color: #2F323B;">
+                    <span style="font-weight: 700; color: #F15A22;">⚠</span> {{ selecaoTruncadaTexto }}
+                  </div>
+                </sc-if>
 
                 <sc-if value="{{ exportOpen }}" hint-placeholder-val="{{ false }}">
                   <div style="padding: 14px 18px; background: #F5F5F5; border-bottom: 1px solid #e3e5e8; display: flex; flex-direction: column; gap: 10px;">
@@ -1339,6 +1347,8 @@ class Component extends DCLogic {
       portes: [],
       cnaes: [],
       cnaeSecundario: false,
+      buscaSelecionandoTudo: false,
+      buscaSelecaoTruncada: null,
       matrizFilial: [],
       regionais: [],
       municipiosHerdados: [],
@@ -2014,6 +2024,20 @@ class Component extends DCLogic {
       .catch(e => this.setState({ apiError: 'Busca falhou: ' + e.message, buscaCarregando: false }));
   }
 
+  // seleciona os CNPJs de TODAS as páginas do resultado atual (não só a página
+  // aberta na tela) — evita ter que ir página por página marcando "selecionar
+  // tudo" pra recortes com mais de 100 empresas.
+  selecionarTodosResultados() {
+    const filtro = this.buildFiltroBusca();
+    this.setState({ buscaSelecionandoTudo: true });
+    apiPost('/api/busca/cnpjs', filtro)
+      .then(r => this.setState({
+        selected: r.cnpjs, buscaSelecionandoTudo: false,
+        buscaSelecaoTruncada: r.truncado ? r.total : null
+      }))
+      .catch(e => this.setState({ buscaSelecionandoTudo: false, apiError: 'Não foi possível selecionar todos os resultados: ' + e.message }));
+  }
+
   abrirDrawer(cnpj) {
     this.setState({ drawerId: cnpj, drawerData: null });
     apiGet('/api/empresas/' + cnpj)
@@ -2200,7 +2224,7 @@ class Component extends DCLogic {
   aplicarSegmentacao(seg) {
     const f = seg.filtro;
     this.setState({
-      savedActive: seg.nome, screen: 'busca', open: null, selected: [],
+      savedActive: seg.nome, screen: 'busca', open: null, selected: [], buscaSelecaoTruncada: null,
       ufs: f.ufs, sits: f.situacoes, portes: f.portes, cnaes: f.cnaes,
       cnaeSecundario: f.cnaes_incluir_secundario || false,
       matrizFilial: f.matriz_filial || [], regionais: f.regionais || [], municipiosHerdados: f.municipios || []
@@ -2263,7 +2287,7 @@ class Component extends DCLogic {
           portes: filtroBusca.portes, cnaes: filtroBusca.cnaes, cnaeSecundario: filtroBusca.cnaes_incluir_secundario || false,
           matrizFilial: filtroBusca.matriz_filial || [],
           regionais: filtroBusca.regionais || [], municipiosHerdados: filtroBusca.municipios || [],
-          savedActive: nomePerfil, selected: []
+          savedActive: nomePerfil, selected: [], buscaSelecaoTruncada: null
         });
         this.backfillCnaeCache(filtroBusca.cnaes, 'cnaeCache');
         this.recalcularEstimativa();
@@ -3162,7 +3186,7 @@ class Component extends DCLogic {
         { label: 'Recarregar dados da Let\'s', hint: 'Envia uma nova planilha da carteira', primary: true, onClick: () => this.setState({ cargaAberta: !st.cargaAberta }) },
         { label: st.anExportandoRelatorio ? 'Gerando…' : 'Exportar relatório completo (PDF)', hint: 'KPIs, rankings e evolução mensal da carteira', onClick: () => this.exportarRelatorioDashboard() }
       ],
-      busca: [{ label: 'Limpar critérios', onClick: () => { this.setState({ ufs: [], cnaes: [], cnaeSecundario: false, sits: [], portes: [], searched: false, buscaResultado: null, selected: [] }); this.recalcularEstimativa(); } }],
+      busca: [{ label: 'Limpar critérios', onClick: () => { this.setState({ ufs: [], cnaes: [], cnaeSecundario: false, sits: [], portes: [], searched: false, buscaResultado: null, selected: [], buscaSelecaoTruncada: null }); this.recalcularEstimativa(); } }],
       mercado: [{ label: 'Exportar estudo (PDF)', hint: 'Gera o dossiê do recorte atual', onClick: () => this.exportarEstudoPdf() }]
     }[st.screen] || [];
 
@@ -3504,7 +3528,12 @@ class Component extends DCLogic {
       },
       selectionLabel: st.selected.length ? st.selected.length + ' selecionada(s)' : 'Nenhuma linha selecionada',
       hasSelecao: st.selected.length > 0,
-      onLimparSelecao: () => this.setState({ selected: [], exportOpen: false }),
+      onLimparSelecao: () => this.setState({ selected: [], exportOpen: false, buscaSelecaoTruncada: null }),
+      mostrarSelecionarTodos: totalPaginas > 1,
+      selecionarTodosLabel: st.buscaSelecionandoTudo ? 'Selecionando…' : 'Selecionar todos os ' + fmtInt(totalBusca) + ' resultados',
+      onSelecionarTodosResultados: () => { if (!st.buscaSelecionandoTudo) this.selecionarTodosResultados(); },
+      hasSelecaoTruncada: !!st.buscaSelecaoTruncada,
+      selecaoTruncadaTexto: 'Este recorte tem ' + fmtInt(st.buscaSelecaoTruncada || 0) + ' resultados — foram selecionadas as primeiras 20.000. Refine os filtros pra selecionar tudo de um recorte menor.',
       onOpenExport: () => { if (st.selected.length) this.setState({ exportOpen: !st.exportOpen }); },
       exportOpen: st.exportOpen && st.selected.length > 0,
       exportBtnStyle: 'padding: 10px 18px; border-radius: 999px; font-size: 12.5px; white-space: nowrap; ' +
