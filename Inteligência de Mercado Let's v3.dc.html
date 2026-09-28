@@ -854,6 +854,33 @@ a:hover { opacity: .75; }
                 </sc-if>
               </div>
 
+              <div data-dd="msetorcomparar" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 7; max-width: 420px;">
+                <div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Comparar com outros setores no mapa (opcional — até 6 no total)</div>
+                <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px; background: #fff;">
+                  <span style="color: #A09BA2; font-size: 12px;">⌕</span>
+                  <input value="{{ mSetorCompararQuery }}" onChange="{{ onMSetorCompararQuery }}" placeholder="ex.: energia, óleo e gás…" style="border: none; outline: none; flex: 1; min-width: 0; font-family: 'Open Sans', sans-serif; font-size: 12.5px; color: #000; background: transparent;">
+                  <span onClick="{{ onToggleMSetorComparar }}" style="cursor: pointer; color: #A09BA2; font-size: 10px;">{{ mSetorCompararCaret }}</span>
+                </div>
+                <sc-if value="{{ mSetorCompararListOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position: absolute; top: 100%; left: 0; width: 420px; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 260px; overflow: auto; padding: 6px; z-index: 30;">
+                    <sc-for list="{{ mSetorCompararList }}" as="i" hint-placeholder-count="5">
+                      <div onClick="{{ i.onClick }}" style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 5px; cursor: pointer;" style-hover="background: #fff6f2;">
+                        <span style="flex: 1; font-size: 12px; color: #2F323B;">{{ i.desc }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ hasMSetoresComparar }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <sc-for list="{{ mSetorCompararChips }}" as="c" hint-placeholder-count="3">
+                      <div onClick="{{ c.onClick }}" style="display: flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; background: #fff6f2; border: 1px solid #F15A22; color: #F15A22; font-size: 11.5px; cursor: pointer; flex: 0 0 auto;">
+                        <span>{{ c.label }}</span><span style="font-size: 9px;">✕</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+
               <sc-if value="{{ mostraFiltroMunicipio }}" hint-placeholder-val="{{ false }}">
                 <div style="display: flex; gap: 14px; flex-wrap: wrap;">
                   <div data-dd="mmeso" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 7; flex: 1; min-width: 220px; max-width: 380px;">
@@ -1020,7 +1047,17 @@ a:hover { opacity: .75; }
                     <div style="font-size: 11.5px; color: #2F323B; font-weight: 600;">{{ mapTotalLabel }}</div>
                   </div>
                   <div ref="{{ mapRef }}" style="width: 100%; height: 566px; background: #F5F5F5; border-radius: 6px; position: relative; overflow: hidden;"></div>
-                  <div style="display: flex; align-items: center; gap: 14px; padding: 2px 2px 6px; flex-wrap: wrap;">
+                  <sc-if value="{{ isMultiSetor }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: flex; align-items: center; gap: 16px; padding: 2px 2px 6px; flex-wrap: wrap;">
+                      <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Setores</div>
+                      <sc-for list="{{ mSetoresLegend }}" as="l" hint-placeholder-count="4">
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #2F323B;">
+                          <div style="{{ l.dot }}"></div><span>{{ l.label }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <div style="{{ escalaRowStyle }}">
                     <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Escala</div>
                     <div style="display: flex; gap: 2px; flex: 0 0 200px;">
                       <sc-for list="{{ scaleBins }}" as="b" hint-placeholder-count="6">
@@ -1039,6 +1076,7 @@ a:hover { opacity: .75; }
                   </div>
                 </div>
 
+                <sc-if value="{{ mSetorUnico }}" hint-placeholder-val="{{ false }}">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
                   <sc-for list="{{ insights }}" as="i" hint-placeholder-count="5">
                     <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;">
@@ -1147,6 +1185,44 @@ a:hover { opacity: .75; }
                   <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14px; font-weight: 700; color: #000;">Leitura do recorte</div>
                   <div style="font-size: 13px; color: #2F323B; line-height: 1.55; max-width: 860px;">{{ leitura }}</div>
                 </div>
+                </sc-if>
+
+                <sc-if value="{{ isMultiSetor }}" hint-placeholder-val="{{ false }}">
+                  <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; overflow: hidden;">
+                    <div style="padding: 16px 18px 12px;">
+                      <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14.5px; font-weight: 700; color: #000;">Cobertura por Setor</div>
+                      <div style="font-size: 11.5px; color: #A09BA2;">cada setor calculado de forma independente (nunca somado) — uma empresa que toca dois setores aparece nos dois, de propósito.</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 40px minmax(0,1fr) minmax(0,1fr) 110px minmax(0,1fr) 140px; background: #F5F5F5; border-top: 1px solid #e3e5e8; border-bottom: 1px solid #e3e5e8;">
+                      <div></div>
+                      <div style="padding: 8px 10px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700;">Setor</div>
+                      <div style="padding: 8px 10px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700;">Mercado do perfil</div>
+                      <div style="padding: 8px 10px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700; text-align: right;">Clientes Let's</div>
+                      <div style="padding: 8px 10px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700;">Cobertura</div>
+                      <div style="padding: 8px 10px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700; text-align: right;">Mercado endereçável</div>
+                    </div>
+                    <sc-for list="{{ mCoberturaSetorRows }}" as="r" hint-placeholder-count="3">
+                      <div style="display: grid; grid-template-columns: 40px minmax(0,1fr) minmax(0,1fr) 110px minmax(0,1fr) 140px; border-bottom: 1px solid #f0f1f3; font-size: 12.5px; align-items: center;">
+                        <div style="padding: 9px 10px;"><div style="{{ r.dot }}"></div></div>
+                        <div style="padding: 9px 10px; font-family: 'Neo Sans Pro', sans-serif; font-weight: 700; color: #2F323B;">{{ r.nome }}</div>
+                        <div style="padding: 9px 10px;">
+                          <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="flex: 1; height: 8px; background: #eef0f2; border-radius: 999px; overflow: hidden;"><div style="{{ r.totalBarStyle }}"></div></div>
+                            <span style="width: 56px; text-align: right; color: #2F323B; font-variant-numeric: tabular-nums;">{{ r.totalFmt }}</span>
+                          </div>
+                        </div>
+                        <div style="padding: 9px 10px; text-align: right; color: #6c6c6c; font-variant-numeric: tabular-nums;">{{ r.clientesFmt }}</div>
+                        <div style="padding: 9px 10px;">
+                          <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="flex: 1; height: 8px; background: #eef0f2; border-radius: 999px; overflow: hidden;"><div style="{{ r.coberturaBarStyle }}"></div></div>
+                            <span style="width: 48px; text-align: right; color: #2F323B; font-variant-numeric: tabular-nums;">{{ r.coberturaFmt }}</span>
+                          </div>
+                        </div>
+                        <div style="padding: 9px 10px; text-align: right; color: #2F323B; font-weight: 600; font-variant-numeric: tabular-nums;">{{ r.enderecavelFmt }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
               </div>
             </div>
           </div>
@@ -1517,6 +1593,12 @@ class Component extends DCLogic {
       // (rápido). Guarda o nome junto pra não precisar recalcular no chip.
       mSetorSelecionado: null,
       mSetorSelecionadoNome: '',
+      mSetoresComparar: [],
+      mSetorCompararQuery: '',
+      mSetorCompararListOpen: false,
+      mSetorCompararResults: [],
+      mComparacaoSetores: null,
+      mComparandoSetores: false,
       mMunicipios: [],
       mMunicipioQuery: '',
       mMunicipioListOpen: false,
@@ -2456,8 +2538,11 @@ class Component extends DCLogic {
     this.carregarEstudoMercado(this.buildFiltroMercado({ modo: 'regional', estados: [uf] }));
   }
 
-  abrirPontoMapa(ibge, nome, apenasClientes) {
-    this.setState({ mPontoAberto: { ibge, nome, apenasClientes: !!apenasClientes }, mPontoResultado: null, mPontoSelecionados: [] });
+  // setorOverride: usado quando o clique veio de um ponto colorido do modo
+  // "comparar setores" — sem isso, a lista abriria com o Setor único do painel
+  // (ou nenhum), não necessariamente o segmento cuja bolinha foi clicada
+  abrirPontoMapa(ibge, nome, apenasClientes, setorOverride) {
+    this.setState({ mPontoAberto: { ibge, nome, apenasClientes: !!apenasClientes, setorOverride: setorOverride || null }, mPontoResultado: null, mPontoSelecionados: [] });
     this.carregarEmpresasMunicipio(1);
   }
 
@@ -2473,10 +2558,44 @@ class Component extends DCLogic {
     // clique na bolinha de destaque (cliente Let's): mostra só os clientes daquele
     // local, ignorando o "mapa pinta" atual — clique no ponto/área "normal" mostra
     // todo mundo do perfil (com o selo de cliente marcado em cada linha)
-    const filtro = { ...base, metrica: ponto.apenasClientes ? 'clientes_lets' : base.metrica, municipio_ibge: ponto.ibge };
+    const filtro = {
+      ...base, metrica: ponto.apenasClientes ? 'clientes_lets' : base.metrica, municipio_ibge: ponto.ibge,
+      setor: ponto.setorOverride || base.setor
+    };
     apiPost('/api/mercado/empresas-municipio?pagina=' + pagina + '&tamanho_pagina=100', filtro)
       .then(r => this.setState({ mPontoResultado: r, mPontoCarregando: false }))
       .catch(e => this.setState({ mPontoCarregando: false, apiError: 'Não foi possível carregar as empresas do município: ' + e.message }));
+  }
+
+  /* ---------- comparar setores no mapa (sem tab visível: 2+ setores ativos já trocam a visão) ---------- */
+  setoresComparacaoAtivos() {
+    const st = this.state;
+    const lista = [];
+    if (st.mSetorSelecionado) lista.push(st.mSetorSelecionado);
+    st.mSetoresComparar.forEach(s => { if (lista.indexOf(s) < 0) lista.push(s); });
+    return lista;
+  }
+
+  adicionarSetorComparar(codigo) {
+    const atuais = this.setoresComparacaoAtivos();
+    if (atuais.indexOf(codigo) >= 0) { this.setState({ mSetorCompararQuery: '', mSetorCompararListOpen: false, mSetorCompararResults: [] }); return; }
+    if (atuais.length >= 6) { this.setState({ apiError: 'Máximo de 6 setores numa comparação.' }); return; }
+    const novos = this.state.mSetoresComparar.slice();
+    novos.push(codigo);
+    this.setState({ mSetoresComparar: novos, mSetorCompararQuery: '', mSetorCompararListOpen: false, mSetorCompararResults: [], mComparacaoSetores: null });
+  }
+
+  removerSetorComparar(codigo) {
+    this.setState({ mSetoresComparar: this.state.mSetoresComparar.filter(s => s !== codigo), mComparacaoSetores: null });
+  }
+
+  compararSetoresNoMapa() {
+    const setores = this.setoresComparacaoAtivos();
+    if (setores.length < 2 || this.state.mComparandoSetores) return;
+    this.setState({ mComparandoSetores: true });
+    apiPost('/api/mercado/comparar-setores', { filtro: this.buildFiltroMercado(), setores })
+      .then(r => this.setState({ mComparacaoSetores: r, mComparandoSetores: false, mDataVersion: this.state.mDataVersion + 1 }))
+      .catch(e => this.setState({ mComparandoSetores: false, apiError: 'Não foi possível comparar os setores: ' + e.message }));
   }
 
   /* ---------- map ---------- */
@@ -2609,7 +2728,12 @@ class Component extends DCLogic {
     const vals = {};
     ((st.mEstudo && st.mEstudo.por_uf) || []).forEach(r => vals[r.uf] = r.qtd);
     const regional = st.mEscopo !== 'nacional';
-    const heat = st.mMode === 'calor', chor = st.mMode === 'estado', disp = st.mMode === 'dispersao';
+    // 2+ setores comparados: sempre vira dispersão colorida, sem passar por nenhum
+    // botão/aba visível — é o "trocar sozinho" que o usuário pediu (ver
+    // setoresComparacaoAtivos/compararSetoresNoMapa)
+    const setoresComparados = (st.mComparacaoSetores && st.mComparacaoSetores.itens) || [];
+    const multiSetor = setoresComparados.length >= 2;
+    const heat = !multiSetor && st.mMode === 'calor', chor = !multiSetor && st.mMode === 'estado', disp = multiSetor || st.mMode === 'dispersao';
     const HEAT_RAMP = ['#dfe9f2', '#bcd4e6', '#8fc0cf', '#f4c98f', '#e2542a', '#b8121f'];
     // gradiente contínuo (não mais 6 faixas fixas por percentil) — com percentil, muitos
     // municípios/estados de valor parecido caíam na mesma faixa e a pintura saía em
@@ -2702,7 +2826,22 @@ class Component extends DCLogic {
     }
 
     let pts = [];
-    if (disp || heat) {
+    if (multiSetor) {
+      // raio normalizado GLOBALMENTE entre todos os setores comparados, pra
+      // bolinhas do mesmo tamanho sempre representarem a mesma ordem de
+      // grandeza, não importa de qual setor vieram
+      const todosValores = setoresComparados.reduce((a, it) => a.concat(it.pontos.map(p => p.valor)), []);
+      const rmax = Math.max.apply(null, todosValores.concat([1]));
+      setoresComparados.forEach((it, i) => {
+        const cor = PALETA_SERIES[i % PALETA_SERIES.length];
+        it.pontos.forEach(p => {
+          const xy = proj([p.lon, p.lat]);
+          if (!xy) return;
+          const r = 1.5 + 5 * Math.sqrt(p.valor / rmax);
+          pts.push({ x: xy[0], y: xy[1], r, valor: p.valor, nome: p.municipio, ibge: p.municipio_ibge, cor, setor: it.setor, setorNome: it.nome });
+        });
+      });
+    } else if (disp || heat) {
       // dispersão real (nacional ou regional): um ponto por município de verdade, no
       // lat/lon real — sem amostragem/jitter sintético, cada bolinha é uma localização real.
       // Em modo calor, isso NÃO desenha nada sozinho (o pts.forEach de desenho só roda
@@ -2719,9 +2858,10 @@ class Component extends DCLogic {
     }
 
     // destaque de clientes Let's por cima do mapa (qualquer visualização) — só faz
-    // sentido em visão mista (total/grande porte); em "só clientes"/"só quem não é
-    // cliente" a tela já é uma coisa só, o destaque seria redundante
-    const mostrarClientes = st.mMetric === 'total' || st.mMetric === 'grande';
+    // sentido em visão mista (total/grande porte) de UM setor só; no modo "comparar
+    // setores" cada item já tem seu próprio clientes_lets, um destaque a mais aqui
+    // ficaria ambíguo (destaque de qual setor?)
+    const mostrarClientes = !multiSetor && (st.mMetric === 'total' || st.mMetric === 'grande');
     let clientesPts = [];
     if (mostrarClientes) {
       const pontosCli = st.mClientesPontos || [];
@@ -2982,11 +3122,14 @@ class Component extends DCLogic {
       }
       if (disp) {
         // azul = mercado (todas as empresas do recorte); quando o filtro já é "só
-        // clientes", o próprio ponto base é o cliente, então mantém laranja
-        ctx.fillStyle = st.mMetric === 'clientes' ? 'rgba(241,90,34,.78)' : 'rgba(43,108,176,.78)';
+        // clientes", o próprio ponto base é o cliente, então mantém laranja. Em
+        // "comparar setores", cada ponto já carrega sua própria cor (p.cor) — fixa
+        // por setor, nunca recalculada conforme o que está selecionado.
+        const corPadrao = st.mMetric === 'clientes' ? 'rgba(241,90,34,.78)' : 'rgba(43,108,176,.78)';
         ctx.strokeStyle = '#fff';
         const sw = .6 / T.k;
         pts.forEach(p => {
+          ctx.fillStyle = p.cor || corPadrao;
           const r = p.r / Math.pow(T.k, .72);
           ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2831853); ctx.fill();
           ctx.lineWidth = sw; ctx.stroke();
@@ -3097,7 +3240,7 @@ class Component extends DCLogic {
           const d2 = (mx - p.x) * (mx - p.x) + (my - p.y) * (my - p.y);
           if (d2 < bd && d2 < (p.r + 6) * (p.r + 6)) { bd = d2; best = p; }
         }
-        if (best) label = (best.nome || 'Munic\u00edpio') + ' \u00b7 ' + best.valor.toLocaleString('pt-BR') + (best.valor === 1 ? ' empresa' : ' empresas') + ' no recorte';
+        if (best) label = (best.nome || 'Munic\u00edpio') + (best.setorNome ? ' \u00b7 ' + best.setorNome : '') + ' \u00b7 ' + best.valor.toLocaleString('pt-BR') + (best.valor === 1 ? ' empresa' : ' empresas') + ' no recorte';
       } else if (regionalFill) {
         let best = null, bd = Infinity;
         for (let i = 0; i < munCells.length; i++) {
@@ -3148,7 +3291,7 @@ class Component extends DCLogic {
           const d2 = (mx - p.x) * (mx - p.x) + (my - p.y) * (my - p.y);
           if (d2 < bd && d2 < (p.r + 6) * (p.r + 6)) { bd = d2; best = p; }
         }
-        if (best && best.ibge) { this.abrirPontoMapa(best.ibge, best.nome || 'Município', false); return; }
+        if (best && best.ibge) { this.abrirPontoMapa(best.ibge, best.nome || 'Município', false, best.setor); return; }
         // no recorte regional, clicar fora de um ponto não faz nada (não tem mais
         // pra onde "descer"). No nacional, cai pro caso 4 abaixo — clicar na área do
         // estado (fora de um ponto específico) também deve abrir o estudo regional
@@ -3784,7 +3927,7 @@ class Component extends DCLogic {
           e.stopPropagation();
           this.setState({
             mSetorSelecionado: s.codigo, mSetorSelecionadoNome: s.descricao,
-            mSetorQuery: '', mSetorListOpen: false, mSetorResults: [],
+            mSetorQuery: '', mSetorListOpen: false, mSetorResults: [], mComparacaoSetores: null,
           });
         }
       })),
@@ -3792,9 +3935,23 @@ class Component extends DCLogic {
       mSemSetorSelecionado: !st.mSetorSelecionado,
       mSetorSelecionadoChip: st.mSetorSelecionado ? {
         label: st.mSetorSelecionadoNome || st.mSetorSelecionado,
-        onClick: (e) => { e.stopPropagation(); this.setState({ mSetorSelecionado: null, mSetorSelecionadoNome: '' }); }
+        onClick: (e) => { e.stopPropagation(); this.setState({ mSetorSelecionado: null, mSetorSelecionadoNome: '', mComparacaoSetores: null }); }
       } : { label: '', onClick: () => {} },
       onExpandirSetor: (e) => { e.stopPropagation(); this.expandirSetorParaCnaes(); },
+      mSetorCompararQuery: st.mSetorCompararQuery,
+      mSetorCompararCaret: st.mSetorCompararListOpen ? '▴' : '▾',
+      onToggleMSetorComparar: (e) => { e.stopPropagation(); this.setState({ mSetorCompararListOpen: !st.mSetorCompararListOpen, open: null }); },
+      onMSetorCompararQuery: (e) => { const v = e.target.value; this.setState({ mSetorCompararQuery: v, mSetorCompararListOpen: !!v, open: null }); this.buscarSetores(v, 'mSetorCompararResults'); },
+      mSetorCompararListOpen: st.mSetorCompararListOpen,
+      mSetorCompararList: (st.mSetorCompararResults || []).map(s => ({
+        code: s.codigo, desc: s.descricao,
+        onClick: (e) => { e.stopPropagation(); this.adicionarSetorComparar(s.codigo); }
+      })),
+      hasMSetoresComparar: st.mSetoresComparar.length > 0,
+      mSetorCompararChips: st.mSetoresComparar.map(codigo => {
+        const dom = (st.domSetores || []).find(s => s.codigo === codigo);
+        return { label: dom ? dom.descricao : codigo, onClick: (e) => { e.stopPropagation(); this.removerSetorComparar(codigo); } };
+      }),
       mostraFiltroMunicipio: st.mEscopo === 'regional',
       mMunicipioQuery: st.mMunicipioQuery,
       mMunicipioCaret: st.mMunicipioListOpen ? '▴' : '▾',
@@ -3842,20 +3999,21 @@ class Component extends DCLogic {
       onSalvarPerfil: () => this.salvarPerfilAtual(),
       onUsarNaBusca: () => this.gerarListaDoPerfil(),
       onCarregarMapa: () => {
-        if (st.mCarregando) return;
+        const comparando = this.setoresComparacaoAtivos().length >= 2;
+        if (st.mCarregando || st.mComparandoSetores) return;
         if (st.mEscopo === 'regional' && this.shownUfs().length === 0) return;
         // recolhe os filtros assim que carrega — o mapa é o que importa depois disso,
         // e o painel gigante de filtros só voltava a fazer falta se o usuário quisesse
         // ajustar de novo (daí o botão pra reabrir, na barra recolhida)
         this.setState({ mFiltrosRecolhidos: true });
-        this.carregarEstudoMercado();
+        if (comparando) this.compararSetoresNoMapa(); else this.carregarEstudoMercado();
       },
       onExpandirFiltros: () => this.setState({ mFiltrosRecolhidos: false }),
       mFiltrosRecolhidosStyle: 'background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 12px 20px; align-items: center; gap: 12px; cursor: pointer; display: ' + (st.mFiltrosRecolhidos ? 'flex' : 'none') + ';',
       mFiltrosExpandidoStyle: 'background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 18px 20px; flex-direction: column; gap: 14px; display: ' + (st.mFiltrosRecolhidos ? 'none' : 'flex') + ';',
-      carregarMapaBtnLabel: st.mCarregando ? 'Carregando…' : 'Carregar mapa',
+      carregarMapaBtnLabel: (st.mCarregando || st.mComparandoSetores) ? 'Carregando…' : (this.setoresComparacaoAtivos().length >= 2 ? 'Comparar setores no mapa' : 'Carregar mapa'),
       carregarMapaBtnStyle: 'border-radius: 999px; padding: 10px 20px; font-family: \'Neo Sans Pro\', sans-serif; font-weight: 700; font-size: 12.5px; ' +
-        ((st.mCarregando || (st.mEscopo === 'regional' && this.shownUfs().length === 0)) ? 'background: #eef0f2; color: #A09BA2; cursor: default;' : 'background: ' + ORANGE + '; color: #FFFFFF; cursor: pointer;'),
+        ((st.mCarregando || st.mComparandoSetores || (st.mEscopo === 'regional' && this.shownUfs().length === 0)) ? 'background: #eef0f2; color: #A09BA2; cursor: default;' : 'background: ' + ORANGE + '; color: #FFFFFF; cursor: pointer;'),
       mercadoFiltroDesatualizado: !!(st.mEstudo && st.mFiltroAplicado !== JSON.stringify(this.buildFiltroMercado())),
 
       escopos: [['nacional', 'Estudo nacional'], ['regional', 'Estudo regional']].map(([k, l]) => ({
@@ -3884,6 +4042,27 @@ class Component extends DCLogic {
       })),
       scaleMin: st.mMode === 'calor' ? 'frio · sem empresas' : Math.min.apply(null, shownUfs.map(u => mVals[u]).concat([0])).toLocaleString('pt-BR'),
       scaleMax: st.mMode === 'calor' ? 'quente · ' + mMax.toLocaleString('pt-BR') : mMax.toLocaleString('pt-BR'),
+      isMultiSetor: !!(st.mComparacaoSetores && st.mComparacaoSetores.itens && st.mComparacaoSetores.itens.length >= 2),
+      mSetorUnico: !(st.mComparacaoSetores && st.mComparacaoSetores.itens && st.mComparacaoSetores.itens.length >= 2),
+      mCoberturaSetorRows: (() => {
+        const itens = (st.mComparacaoSetores && st.mComparacaoSetores.itens) || [];
+        const maxTotal = Math.max(1, ...itens.map(i => i.total));
+        return itens.map((i, idx) => ({
+          nome: i.nome,
+          dot: this.dot(PALETA_SERIES[idx % PALETA_SERIES.length], 10),
+          totalFmt: fmtInt(i.total),
+          totalBarStyle: 'width: ' + Math.max(2, Math.round(i.total / maxTotal * 100)) + '%; height: 100%; background: ' + PALETA_SERIES[idx % PALETA_SERIES.length] + '; border-radius: 999px;',
+          clientesFmt: fmtInt(i.clientes_lets),
+          coberturaFmt: fmtPct(i.cobertura_pct),
+          coberturaBarStyle: 'width: ' + Math.max(2, Math.min(100, i.cobertura_pct)) + '%; height: 100%; background: #21a35a; border-radius: 999px;',
+          enderecavelFmt: fmtInt(i.mercado_enderecavel)
+        }));
+      })(),
+      escalaRowStyle: 'display: ' + ((st.mComparacaoSetores && st.mComparacaoSetores.itens && st.mComparacaoSetores.itens.length >= 2) ? 'none' : 'flex') + '; align-items: center; gap: 14px; padding: 2px 2px 6px; flex-wrap: wrap;',
+      mSetoresLegend: ((st.mComparacaoSetores && st.mComparacaoSetores.itens) || []).map((it, i) => ({
+        dot: this.dot(PALETA_SERIES[i % PALETA_SERIES.length], 9),
+        label: it.nome + ' · ' + fmtInt(it.total)
+      })),
       hasClientesOverlay: st.mMetric === 'total' || st.mMetric === 'grande',
       clientesOverlayDot: 'width: 10px; height: 10px; border-radius: 999px; border: 1.5px solid #000; background: ' + (st.mMode === 'dispersao' ? '#F15A22' : '#787c83') + ';',
       rankingScopeLabel: st.mEscopo === 'nacional' ? 'todas as UFs do perfil' : 'estados do recorte',
