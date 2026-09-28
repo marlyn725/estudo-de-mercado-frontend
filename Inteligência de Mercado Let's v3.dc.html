@@ -1071,6 +1071,41 @@ a:hover { opacity: .75; }
                   </div>
                 </sc-if>
 
+                <sc-if value="{{ hasRankingRegional }}" hint-placeholder-val="{{ false }}">
+                  <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; overflow: hidden;">
+                    <div style="padding: 16px 18px 12px;">
+                      <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14.5px; font-weight: 700; color: #000;">Cobertura por Regional</div>
+                      <div style="font-size: 11.5px; color: #A09BA2;">as 3 regionais inteiras, com o mesmo perfil (Setor, Porte, Situação etc.) — ignora o filtro de Regional/Estados aqui de propósito, pra comparar oportunidade entre territórios.</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 100px minmax(0,1fr) 110px minmax(0,1fr) 140px; background: #F5F5F5; border-top: 1px solid #e3e5e8; border-bottom: 1px solid #e3e5e8;">
+                      <div style="padding: 8px 10px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700;">Regional</div>
+                      <div style="padding: 8px 10px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700;">Mercado do perfil</div>
+                      <div style="padding: 8px 10px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700; text-align: right;">Clientes Let's</div>
+                      <div style="padding: 8px 10px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700;">Cobertura</div>
+                      <div style="padding: 8px 10px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700; text-align: right;">Mercado endereçável</div>
+                    </div>
+                    <sc-for list="{{ rankingRegionalRows }}" as="r" hint-placeholder-count="3">
+                      <div style="display: grid; grid-template-columns: 100px minmax(0,1fr) 110px minmax(0,1fr) 140px; border-bottom: 1px solid #f0f1f3; font-size: 12.5px; align-items: center;">
+                        <div style="padding: 9px 10px; font-family: 'Neo Sans Pro', sans-serif; font-weight: 700; color: #2F323B;">{{ r.regional }}</div>
+                        <div style="padding: 9px 10px;">
+                          <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="flex: 1; height: 8px; background: #eef0f2; border-radius: 999px; overflow: hidden;"><div style="{{ r.totalBarStyle }}"></div></div>
+                            <span style="width: 56px; text-align: right; color: #2F323B; font-variant-numeric: tabular-nums;">{{ r.totalFmt }}</span>
+                          </div>
+                        </div>
+                        <div style="padding: 9px 10px; text-align: right; color: #6c6c6c; font-variant-numeric: tabular-nums;">{{ r.clientesFmt }}</div>
+                        <div style="padding: 9px 10px;">
+                          <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="flex: 1; height: 8px; background: #eef0f2; border-radius: 999px; overflow: hidden;"><div style="{{ r.coberturaBarStyle }}"></div></div>
+                            <span style="width: 48px; text-align: right; color: #2F323B; font-variant-numeric: tabular-nums;">{{ r.coberturaFmt }}</span>
+                          </div>
+                        </div>
+                        <div style="padding: 9px 10px; text-align: right; color: #2F323B; font-weight: 600; font-variant-numeric: tabular-nums;">{{ r.enderecavelFmt }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
                 <sc-if value="{{ hasRankingCobertura }}" hint-placeholder-val="{{ false }}">
                   <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; overflow: hidden;">
                     <div style="padding: 16px 18px 12px;">
@@ -3900,6 +3935,20 @@ class Component extends DCLogic {
         return itens.map(i => ({
           uf: i.uf,
           onClick: () => this.abrirEstudoRegionalDoEstado(i.uf),
+          totalFmt: fmtInt(i.total),
+          totalBarStyle: 'width: ' + Math.max(2, Math.round(i.total / maxTotal * 100)) + '%; height: 100%; background: ' + ORANGE + '; border-radius: 999px;',
+          clientesFmt: fmtInt(i.clientes_lets),
+          coberturaFmt: fmtPct(i.cobertura_pct),
+          coberturaBarStyle: 'width: ' + Math.max(2, Math.min(100, i.cobertura_pct)) + '%; height: 100%; background: #21a35a; border-radius: 999px;',
+          enderecavelFmt: fmtInt(i.mercado_enderecavel)
+        }));
+      })(),
+      hasRankingRegional: !!(mEstudo && mEstudo.ranking_regional && mEstudo.ranking_regional.length),
+      rankingRegionalRows: (() => {
+        const itens = (mEstudo && mEstudo.ranking_regional) || [];
+        const maxTotal = Math.max(1, ...itens.map(i => i.total));
+        return itens.map(i => ({
+          regional: i.regional,
           totalFmt: fmtInt(i.total),
           totalBarStyle: 'width: ' + Math.max(2, Math.round(i.total / maxTotal * 100)) + '%; height: 100%; background: ' + ORANGE + '; border-radius: 999px;',
           clientesFmt: fmtInt(i.clientes_lets),
