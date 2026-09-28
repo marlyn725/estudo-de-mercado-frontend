@@ -1026,8 +1026,8 @@ a:hover { opacity: .75; }
                   </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
-                  <sc-for list="{{ insights }}" as="i" hint-placeholder-count="4">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
+                  <sc-for list="{{ insights }}" as="i" hint-placeholder-count="5">
                     <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;">
                       <div style="font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">{{ i.label }}</div>
                       <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 21px; font-weight: 700; color: #000; line-height: 1;">{{ i.value }}</div>
@@ -1035,6 +1035,28 @@ a:hover { opacity: .75; }
                     </div>
                   </sc-for>
                 </div>
+
+                <sc-if value="{{ hasMPorteMix }}" hint-placeholder-val="{{ false }}">
+                  <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 18px;">
+                    <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14.5px; font-weight: 700; color: #000; margin-bottom: 4px;">Composição por porte do recorte</div>
+                    <div style="font-size: 11.5px; color: #A09BA2; margin-bottom: 14px;">revela se esse mercado tem comprador estruturado ou é majoritariamente MEI</div>
+                    <div style="display: flex; height: 13px; border-radius: 999px; overflow: hidden; margin-bottom: 14px;">
+                      <sc-for list="{{ mPorteMix }}" as="p" hint-placeholder-count="6">
+                        <div style="{{ p.slice }}"></div>
+                      </sc-for>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                      <sc-for list="{{ mPorteMix }}" as="p" hint-placeholder-count="6">
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #2F323B;">
+                          <div style="{{ p.dot }}"></div>
+                          <span style="flex: 1;">{{ p.label }}</span>
+                          <span style="color: #6c6c6c; font-variant-numeric: tabular-nums;">{{ p.count }}</span>
+                          <span style="width: 48px; text-align: right; font-weight: 600;">{{ p.pct }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
 
                 <div style="background: #FFFFFF; border: 3px solid #F15A22; border-radius: 0 70px 0 70px; padding: 22px 26px; display: flex; flex-direction: column; gap: 8px;">
                   <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14px; font-weight: 700; color: #000;">Leitura do recorte</div>
@@ -3781,11 +3803,20 @@ class Component extends DCLogic {
           label: 'Praças concentradas', value: top3.length ? top3.join(' · ') : '—',
           note: mTotal > 0 && top3.length ? Math.round(top3.reduce((a, u) => a + (mVals[u] || 0), 0) / mTotal * 100) + '% do mercado do perfil · ' + insightsReal.pracas_concentradas + ' praça(s) no total' : 'nenhuma praça no recorte'
         },
-        { label: 'Clientes Let\'s no perfil', value: fmtInt(clientesRec), note: mTotal > 0 ? 'penetração de ' + (clientesRec / mTotal * 100).toFixed(1) + '%' : '—' },
+        { label: 'Clientes Let\'s no perfil', value: fmtInt(clientesRec), note: 'empresas do perfil que já são clientes' },
+        {
+          label: 'Cobertura de carteira', value: fmtPct(insightsReal.cobertura_pct),
+          note: 'clientes Let\'s ÷ mercado do perfil — quanto desse recorte a Let\'s já capturou'
+        },
         { label: 'Mercado endereçável', value: fmtInt(insightsReal.mercado_enderecavel), note: 'empresas do perfil sem contrato' },
         { label: 'Ticket médio do perfil', value: insightsReal.ticket_medio_perfil != null ? fmtMoedaAbrev(insightsReal.ticket_medio_perfil) + '/mês' : '—', note: 'referência dos contratos atuais da carteira' }
       ],
       leitura: mEstudo ? mEstudo.leitura_recorte : (st.mCarregando ? 'Carregando leitura do recorte…' : 'Ajuste os filtros do perfil para gerar a leitura do recorte.'),
+      mPorteMix: ((mEstudo && mEstudo.porte_mix) || []).map(p => {
+        const c = PORTE_COLORS[p.label] || '#A09BA2';
+        return { label: p.label, count: fmtInt(p.count), pct: fmtPct(p.pct), slice: 'width: ' + p.pct + '%; background: ' + c + ';', dot: this.dot(c, 9) };
+      }),
+      hasMPorteMix: !!(mEstudo && mEstudo.porte_mix && mEstudo.porte_mix.length),
 
       /* pop-up de empresas do ponto do mapa */
       pontoMapaOpen: !!st.mPontoAberto,
