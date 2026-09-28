@@ -778,6 +778,13 @@ a:hover { opacity: .75; }
         <sc-if value="{{ isMercado }}" hint-placeholder-val="{{ false }}">
           <div style="padding: 20px 28px 32px; display: flex; flex-direction: column; gap: 16px;">
 
+            <div style="display: flex; gap: 8px;">
+              <sc-for list="{{ mAbaTabs }}" as="t" hint-placeholder-count="2">
+                <div onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</div>
+              </sc-for>
+            </div>
+
+            <sc-if value="{{ mAbaMapa }}" hint-placeholder-val="{{ false }}">
             <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 14px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
               <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Escopo do estudo</div>
               <div style="display: flex; gap: 8px;">
@@ -808,6 +815,7 @@ a:hover { opacity: .75; }
               </sc-for>
               <div style="font-size: 12px; color: #2F323B; font-weight: 600; white-space: nowrap; margin-left: 4px;">{{ escopoScopeLabel }}</div>
             </div>
+            </sc-if>
 
             <!-- barra recolhida: some assim que "Carregar mapa" é clicado, deixando o mapa
                  com mais espaço; clicar nela (ou no botão "editar filtros") reabre o painel
@@ -960,7 +968,9 @@ a:hover { opacity: .75; }
                   <div style="font-size: 12px; color: #6c6c6c;">{{ mercadoRecorteLabel }}</div>
                 </sc-if>
                 <div style="flex: 1;"></div>
-                <div onClick="{{ onCarregarMapa }}" style="{{ carregarMapaBtnStyle }}" style-hover="background: #E75613;">{{ carregarMapaBtnLabel }}</div>
+                <sc-if value="{{ mAbaMapa }}" hint-placeholder-val="{{ false }}">
+                  <div onClick="{{ onCarregarMapa }}" style="{{ carregarMapaBtnStyle }}" style-hover="background: #E75613;">{{ carregarMapaBtnLabel }}</div>
+                </sc-if>
                 <div onClick="{{ onSalvarPerfil }}" style="border: 1px solid #d8dbdf; border-radius: 999px; padding: 9px 18px; font-size: 12.5px; color: #2F323B; cursor: pointer;" style-hover="border-color: #F15A22; color: #F15A22;">Salvar perfil</div>
                 <div onClick="{{ onUsarNaBusca }}" style="background: #F15A22; color: #fff; border-radius: 999px; padding: 10px 20px; font-family: 'Neo Sans Pro', sans-serif; font-weight: 700; font-size: 12.5px; cursor: pointer;" style-hover="background: #E75613;">Gerar lista deste perfil</div>
               </div>
@@ -972,6 +982,7 @@ a:hover { opacity: .75; }
               </sc-if>
             </div>
 
+            <sc-if value="{{ mAbaMapa }}" hint-placeholder-val="{{ false }}">
             <div style="display: grid; grid-template-columns: 268px minmax(0, 1fr); gap: 16px; align-items: start;">
               <div style="display: flex; flex-direction: column; gap: 14px;">
                 <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 12px;">
@@ -1077,6 +1088,61 @@ a:hover { opacity: .75; }
                 </div>
               </div>
             </div>
+            </sc-if>
+
+            <sc-if value="{{ mAbaComparar }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14.5px; font-weight: 700; color: #000;">Comparar estados</div>
+                  <div style="font-size: 11.5px; color: #A09BA2;">{{ compararHint }}</div>
+                </div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                  <sc-for list="{{ mCompararUfPills }}" as="u" hint-placeholder-count="10">
+                    <div onClick="{{ u.onClick }}" style="{{ u.style }}">{{ u.label }}</div>
+                  </sc-for>
+                </div>
+                <div>
+                  <div onClick="{{ onComparar }}" style="{{ compararBtnStyle }}">{{ compararBtnLabel }}</div>
+                </div>
+              </div>
+
+              <sc-if value="{{ hasComparacao }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; overflow: hidden;">
+                  <div style="display: grid; grid-template-columns: 70px minmax(0,1fr) 110px minmax(0,1fr) 130px 130px; background: #F5F5F5; border-bottom: 1px solid #e3e5e8;">
+                    <div style="padding: 10px 12px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700;">UF</div>
+                    <div style="padding: 10px 12px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700;">Mercado do perfil</div>
+                    <div style="padding: 10px 12px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700; text-align: right;">Clientes Let's</div>
+                    <div style="padding: 10px 12px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700;">Cobertura</div>
+                    <div style="padding: 10px 12px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700; text-align: right;">Mercado endereçável</div>
+                    <div style="padding: 10px 12px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6c6c6c; font-weight: 700; text-align: right;">Ticket médio</div>
+                  </div>
+                  <sc-for list="{{ mComparacaoRows }}" as="r" hint-placeholder-count="4">
+                    <div style="display: grid; grid-template-columns: 70px minmax(0,1fr) 110px minmax(0,1fr) 130px 130px; border-bottom: 1px solid #f0f1f3; font-size: 12.5px; align-items: center;">
+                      <div style="padding: 10px 12px; font-family: 'Neo Sans Pro', sans-serif; font-weight: 700; color: #2F323B;">{{ r.uf }}</div>
+                      <div style="padding: 10px 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <div style="flex: 1; height: 8px; background: #eef0f2; border-radius: 999px; overflow: hidden;"><div style="{{ r.totalBarStyle }}"></div></div>
+                          <span style="width: 56px; text-align: right; color: #2F323B; font-variant-numeric: tabular-nums;">{{ r.totalFmt }}</span>
+                        </div>
+                      </div>
+                      <div style="padding: 10px 12px; text-align: right; color: #6c6c6c; font-variant-numeric: tabular-nums;">{{ r.clientesFmt }}</div>
+                      <div style="padding: 10px 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <div style="flex: 1; height: 8px; background: #eef0f2; border-radius: 999px; overflow: hidden;"><div style="{{ r.coberturaBarStyle }}"></div></div>
+                          <span style="width: 48px; text-align: right; color: #2F323B; font-variant-numeric: tabular-nums;">{{ r.coberturaFmt }}</span>
+                        </div>
+                      </div>
+                      <div style="padding: 10px 12px; text-align: right; color: #2F323B; font-weight: 600; font-variant-numeric: tabular-nums;">{{ r.enderecavelFmt }}</div>
+                      <div style="padding: 10px 12px; text-align: right; color: #6c6c6c; font-variant-numeric: tabular-nums;">{{ r.ticketFmt }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ comparandoVazio }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 24px; text-align: center; font-size: 12.5px; color: #A09BA2;">Selecione ao menos 2 estados acima e clique em "Comparar" para ver o resultado.</div>
+              </sc-if>
+            </sc-if>
           </div>
         </sc-if>
 
@@ -1428,6 +1494,10 @@ class Component extends DCLogic {
       savedActive: '',
       segmentacoesSalvas: [],
       mEscopo: 'nacional',
+      mAba: 'mapa',
+      mCompararUfs: [],
+      mComparacao: null,
+      mComparando: false,
       mFiltrosRecolhidos: false,
       mMode: 'calor',
       mMetric: 'total',
@@ -2181,6 +2251,25 @@ class Component extends DCLogic {
         });
       })
       .catch(e => { if (this._mercadoToken === token) this.setState({ mCarregando: false, apiError: 'Não foi possível carregar o estudo de mercado: ' + e.message }); });
+  }
+
+  toggleCompararUf(uf) {
+    const atuais = this.state.mCompararUfs.slice();
+    const i = atuais.indexOf(uf);
+    if (i >= 0) atuais.splice(i, 1); else atuais.push(uf);
+    this.setState({ mCompararUfs: atuais, mComparacao: null });
+  }
+
+  // reaproveita o mesmo filtro base (Setor, Porte, Situação, Matriz, Regional) do
+  // painel "Perfil de empresas" — só a dimensão geográfica muda, virando os
+  // estados escolhidos aqui em vez do escopo nacional/regional do mapa
+  compararUfs() {
+    const st = this.state;
+    if (st.mCompararUfs.length < 2 || st.mComparando) return;
+    this.setState({ mComparando: true });
+    apiPost('/api/mercado/comparar-ufs', { filtro: this.buildFiltroMercado(), ufs: st.mCompararUfs })
+      .then(r => this.setState({ mComparacao: r, mComparando: false }))
+      .catch(e => this.setState({ mComparando: false, apiError: 'Não foi possível comparar os estados: ' + e.message }));
   }
 
   agendarBuscarCnaesMercado(q) {
@@ -3723,7 +3812,7 @@ class Component extends DCLogic {
         onClick: (e) => { e.stopPropagation(); this.setState({ mSetorSelecionado: null, mSetorSelecionadoNome: '' }); }
       } : { label: '', onClick: () => {} },
       onExpandirSetor: (e) => { e.stopPropagation(); this.expandirSetorParaCnaes(); },
-      mostraFiltroMunicipio: st.mEscopo === 'regional',
+      mostraFiltroMunicipio: st.mEscopo === 'regional' && st.mAba === 'mapa',
       mMunicipioQuery: st.mMunicipioQuery,
       mMunicipioCaret: st.mMunicipioListOpen ? '▴' : '▾',
       onToggleMMunicipio: (e) => { e.stopPropagation(); this.setState({ mMunicipioListOpen: !st.mMunicipioListOpen, open: null }); },
@@ -3758,7 +3847,7 @@ class Component extends DCLogic {
         this.dropdown('mcap', 'Capital social', '', CAPITAIS, 'mCapital', null),
         this.dropdown('mreg', 'Região', '', Object.keys(REGIOES), 'mRegioes', null),
         this.dropdown('muf', 'Estados', '', (st.mRegioes.length ? st.mRegioes.reduce((a, r) => a.concat(REGIOES[r]), []) : (st.domUfs && st.domUfs.length ? st.domUfs : ALL_UFS)), 'mUfs', null)
-      ].slice(0, st.mEscopo === 'nacional' ? 5 : 7),
+      ].slice(0, (st.mAba !== 'mapa' || st.mEscopo === 'nacional') ? 5 : 7),
       cnpjQuery: st.cnpjQuery,
       onCnpjQuery: (e) => { const v = e.target.value; this.setState({ cnpjQuery: v }); this.agendarLocalizarCnpj(v); },
       // antes sempre mostrava "Perfil: <lista enorme de CNAEs> · portes" aqui — com
@@ -3784,7 +3873,7 @@ class Component extends DCLogic {
       carregarMapaBtnLabel: st.mCarregando ? 'Carregando…' : 'Carregar mapa',
       carregarMapaBtnStyle: 'border-radius: 999px; padding: 10px 20px; font-family: \'Neo Sans Pro\', sans-serif; font-weight: 700; font-size: 12.5px; ' +
         ((st.mCarregando || (st.mEscopo === 'regional' && this.shownUfs().length === 0)) ? 'background: #eef0f2; color: #A09BA2; cursor: default;' : 'background: ' + ORANGE + '; color: #FFFFFF; cursor: pointer;'),
-      mercadoFiltroDesatualizado: !!(st.mEstudo && st.mFiltroAplicado !== JSON.stringify(this.buildFiltroMercado())),
+      mercadoFiltroDesatualizado: st.mAba === 'mapa' && !!(st.mEstudo && st.mFiltroAplicado !== JSON.stringify(this.buildFiltroMercado())),
 
       escopos: [['nacional', 'Estudo nacional'], ['regional', 'Estudo regional']].map(([k, l]) => ({
         label: l, onClick: () => this.setState({ mEscopo: k }), style: this.chip(st.mEscopo === k, 'flex: 1; font-size: 11.5px;')
@@ -3792,6 +3881,39 @@ class Component extends DCLogic {
       escopoHelp: st.mEscopo === 'nacional' ? 'Brasil inteiro, agregado por UF. Bom para escolher a próxima praça.'
         : this.shownUfs().length === 0 ? 'Selecione ao menos um estado ou uma região (nos filtros de Estados/Região acima) para carregar os municípios desse recorte.'
         : 'Recorta o mapa nos estados selecionados acima e mostra a distribuição interna das empresas do perfil.',
+
+      /* comparação entre estados */
+      mAbaTabs: [['mapa', 'Mapa'], ['comparar', 'Comparar estados']].map(([k, l]) => ({
+        label: l, onClick: () => this.setState({ mAba: k }), style: this.chip(st.mAba === k, 'font-size: 12px;')
+      })),
+      mAbaMapa: st.mAba === 'mapa',
+      mAbaComparar: st.mAba === 'comparar',
+      mCompararUfPills: ALL_UFS.map(uf => ({
+        label: uf, onClick: () => this.toggleCompararUf(uf),
+        style: 'padding: 6px 11px; border-radius: 999px; font-size: 11.5px; cursor: pointer; border: 1px solid ' +
+          (st.mCompararUfs.indexOf(uf) >= 0 ? ORANGE + '; background: #fff6f2; color: ' + ORANGE + '; font-weight: 600;' : '#d8dbdf; background: #fff; color: #6c6c6c;')
+      })),
+      onComparar: () => this.compararUfs(),
+      compararBtnLabel: st.mComparando ? 'Comparando…' : 'Comparar (' + st.mCompararUfs.length + ' selecionado' + (st.mCompararUfs.length === 1 ? '' : 's') + ')',
+      compararBtnStyle: 'border-radius: 999px; padding: 10px 20px; font-family: \'Neo Sans Pro\', sans-serif; font-weight: 700; font-size: 12.5px; ' +
+        ((st.mComparando || st.mCompararUfs.length < 2) ? 'background: #eef0f2; color: #A09BA2; cursor: default;' : 'background: ' + ORANGE + '; color: #FFFFFF; cursor: pointer;'),
+      compararHint: st.mCompararUfs.length < 2 ? 'Selecione ao menos 2 estados para comparar.' : 'Usa o mesmo perfil de empresas do painel acima (Setor, Porte, Situação etc.) — só a UF muda por coluna.',
+      mComparacaoRows: (() => {
+        const itens = ((st.mComparacao && st.mComparacao.itens) || []).slice().sort((a, b) => b.mercado_enderecavel - a.mercado_enderecavel);
+        const maxTotal = Math.max(1, ...itens.map(i => i.total));
+        return itens.map(i => ({
+          uf: i.uf,
+          totalFmt: fmtInt(i.total),
+          totalBarStyle: 'width: ' + Math.max(2, Math.round(i.total / maxTotal * 100)) + '%; height: 100%; background: ' + ORANGE + '; border-radius: 999px;',
+          clientesFmt: fmtInt(i.clientes_lets),
+          coberturaFmt: fmtPct(i.cobertura_pct),
+          coberturaBarStyle: 'width: ' + Math.max(2, Math.min(100, i.cobertura_pct)) + '%; height: 100%; background: #21a35a; border-radius: 999px;',
+          enderecavelFmt: fmtInt(i.mercado_enderecavel),
+          ticketFmt: i.ticket_medio_perfil != null ? fmtMoedaAbrev(i.ticket_medio_perfil) + '/mês' : '—'
+        }));
+      })(),
+      hasComparacao: !!(st.mComparacao && st.mComparacao.itens && st.mComparacao.itens.length),
+      comparandoVazio: st.mAba === 'comparar' && !st.mComparando && !(st.mComparacao && st.mComparacao.itens && st.mComparacao.itens.length),
       mapModes: [['calor', 'Mapa de calor', 'quente / frio'], ['dispersao', 'Dispersão', 'pontos'], ['estado', 'Concentração por estado', 'coroplético']].map(([k, l, tag]) => ({
         label: l, tag, onClick: () => this.setState({ mMode: k }),
         style: 'display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 6px; font-size: 12.5px; cursor: pointer; ' +
