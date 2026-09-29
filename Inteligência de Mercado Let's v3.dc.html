@@ -3472,7 +3472,7 @@ class Component extends DCLogic {
           ctx.stroke();
         }
         const centroXY = proj([raioCentroAtual.lon, raioCentroAtual.lat]);
-        if (centroXY) this._desenharPino(ctx, centroXY[0], centroXY[1], RAIO_PINO_R / Math.pow(T.k, .5), IMG_PINO_RAIO, '#1a73e8', 1.2 / T.k);
+        if (centroXY) this._desenharPino(ctx, centroXY[0], centroXY[1], RAIO_PINO_R(), IMG_PINO_RAIO, '#1a73e8', 1.2 / T.k);
       }
       if (cnpjXY) {
         const r = 9 / Math.pow(T.k, .5);
@@ -3528,23 +3528,27 @@ class Component extends DCLogic {
 
     let raf = 0;
     const schedule = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; draw(); }); };
-    // tamanho do pino do raio: cresce com o zoom (sqrt(T.k), não constante — o
-    // usuário testou tamanho fixo na tela e achou ruim, queria ver o pino
-    // aumentar de verdade ao aproximar, não só a área ao redor dele) e com uma
-    // base bem maior que antes (18, era 11) pra nunca ficar minúsculo nem no
-    // zoom mais afastado. Usado tanto pra desenhar (_desenharPino) quanto pro
-    // alvo de arrastar (raioPinoHit), os dois têm que concordar sempre no
-    // mesmo valor.
-    const RAIO_PINO_R = 18;
-    // idem pro pino de cliente Let's — cresce com o zoom (mesma ideia), piso
-    // bem mais alto (10, era 6) e fator maior (1.6x, era 1.35x): com o PNG em
-    // alta resolução (tem a marca Let's dentro), um pino pequeno fica
-    // ilegível. Compartilhado entre o desenho (dentro de draw()) e o alvo de
-    // clique (no listener 'click' mais abaixo) — os dois têm que concordar no
-    // mesmo tamanho, senão o clique erra do que está desenhado na tela (foi
-    // exatamente esse o bug: o alvo de clique usava um raio fixo em volta da
-    // ponta, sem bater com o tamanho real do pino).
-    const raioPinoCliente = (p) => Math.max(10, (p.r / Math.pow(T.k, .6)) * 1.6);
+    // tamanho do pino do raio, EM PIXEL DE TELA: cresce com o zoom até um TETO
+    // (32px, ~86px de altura total do pino) — sem teto, num zoom alto o pino
+    // virava maior que o próprio município que deveria apontar (bug relatado:
+    // "nem dá pra saber onde o pin realmente está"). Base 18 no zoom mínimo,
+    // cresce suave (T.k^.3) até travar por volta de T.k~10 (zoom de município)
+    // e não passa disso nem no zoom máximo. Usado tanto pra desenhar
+    // (_desenharPino) quanto pro alvo de arrastar (raioPinoHit) — os dois têm
+    // que concordar sempre no mesmo valor.
+    const RAIO_PINO_R = () => Math.min(32, 18 * Math.pow(T.k, .3)) / T.k;
+    // idem pro pino de cliente Let's: a BASE (em T.k=1) ainda depende de p.r
+    // (nº de empresas no local — cluster maior, pino maior), mas o tamanho na
+    // TELA depois de crescer com o zoom também trava no mesmo teto (32px),
+    // pelo mesmo motivo do pino do raio. Compartilhado entre o desenho
+    // (dentro de draw()) e o alvo de clique (no listener 'click' mais abaixo)
+    // — os dois têm que concordar no mesmo tamanho, senão o clique erra do
+    // que está desenhado na tela (foi exatamente esse o bug do clique
+    // quebrado antes).
+    const raioPinoCliente = (p) => {
+      const base = Math.max(10, p.r * 1.6);
+      return Math.min(32, base * Math.pow(T.k, .3)) / T.k;
+    };
     // acerta um clique/toque em QUALQUER parte visível de um pino (a cabeça/imagem
     // grande OU o cone abaixo dela) — não só bem na pontinha exata (a coordenada
     // geográfica real). Usada tanto pro pino do raio (arrastar) quanto pro pino de
@@ -3562,7 +3566,7 @@ class Component extends DCLogic {
       if (!centro) return false;
       const ponta = proj([centro.lon, centro.lat]);
       if (!ponta) return false;
-      return pinoAlvo(mx, my, ponta[0], ponta[1], RAIO_PINO_R / Math.pow(T.k, .5));
+      return pinoAlvo(mx, my, ponta[0], ponta[1], RAIO_PINO_R());
     };
     const zoom = d3.zoom().scaleExtent([1, 60]).translateExtent([[0, 0], [w, h]])
       .filter((ev) => {
