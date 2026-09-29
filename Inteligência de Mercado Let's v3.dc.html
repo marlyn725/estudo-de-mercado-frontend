@@ -87,6 +87,229 @@ a:hover { opacity: .75; }
 
       <div style="padding: 0 20px 18px; font-size: 10px; color: #6f7178; line-height: 1.5;">Let's GTF · VIXPAR<br>MVP local · v0.5</div>
     </div>
+    <sc-if value="{{ isMercado }}" hint-placeholder-val="{{ false }}">
+      <div style="{{ painelFiltroContainerStyle }}">
+        <div style="{{ painelFiltroHeaderStyle }}">
+          <sc-if value="{{ mFiltroPainelExpandido }}" hint-placeholder-val="{{ true }}">
+            <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13px; font-weight: 700; color: #000; white-space: nowrap;">Perfil de empresas</div>
+          </sc-if>
+          <div onClick="{{ onTogglePainelFiltro }}" title="{{ painelFiltroToggleHint }}" style="{{ painelFiltroToggleStyle }}" style-hover="border-color: #F15A22; color: #F15A22;">{{ painelFiltroToggleIcon }}</div>
+        </div>
+
+        <sc-if value="{{ mFiltroPainelExpandido }}" hint-placeholder-val="{{ true }}">
+          <div style="flex: 1; min-height: 0; min-width: 0; overflow-y: auto; overflow-x: hidden; padding: 12px 14px 18px; display: flex; flex-direction: column; gap: 16px;">
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Escopo do estudo</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <sc-for list="{{ escopos }}" as="e" hint-placeholder-count="2">
+                  <div onClick="{{ e.onClick }}" style="{{ e.style }}">{{ e.label }}</div>
+                </sc-for>
+              </div>
+              <div style="font-size: 11px; color: #2F323B; font-weight: 600;">{{ escopoScopeLabel }}</div>
+              <div style="font-size: 10.5px; color: #A09BA2; line-height: 1.4;">{{ escopoHelp }}</div>
+            </div>
+
+            <sc-for list="{{ topDrops }}" as="d" hint-placeholder-count="2">
+              <div data-dd="top" style="position: relative; display: flex; flex-direction: column; gap: 6px; z-index: 10;">
+                <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">{{ d.label }}</div>
+                <div onClick="{{ d.onToggle }}" style="{{ d.headStyle }}">
+                  <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ d.summary }}</span>
+                  <span style="color: #A09BA2; font-size: 10px;">{{ d.caret }}</span>
+                </div>
+                <sc-if value="{{ d.open }}" hint-placeholder-val="{{ false }}">
+                  <div style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); padding: 6px; z-index: 40;">
+                    <sc-for list="{{ d.items }}" as="i" hint-placeholder-count="4">
+                      <div onClick="{{ i.onClick }}" style="{{ i.style }}">
+                        <div style="{{ i.box }}"></div>
+                        <span style="flex: 1;">{{ i.label }}</span>
+                        <span style="font-size: 11px; color: #A09BA2;">{{ i.hint }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+
+            <div data-dd="msetor" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 8;">
+              <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Setor</div>
+              <sc-if value="{{ mSemSetorSelecionado }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px; background: #fff;">
+                  <span style="color: #A09BA2; font-size: 12px;">⌕</span>
+                  <input value="{{ mSetorQuery }}" onChange="{{ onMSetorQuery }}" placeholder="mineração, florestal…" style="border: none; outline: none; flex: 1; min-width: 0; font-family: 'Open Sans', sans-serif; font-size: 12.5px; color: #000; background: transparent;">
+                  <span onClick="{{ onToggleMSetor }}" style="cursor: pointer; color: #A09BA2; font-size: 10px;">{{ mSetorCaret }}</span>
+                </div>
+                <sc-if value="{{ mSetorListOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 260px; overflow: auto; padding: 6px; z-index: 30;">
+                    <sc-for list="{{ mSetorList }}" as="i" hint-placeholder-count="5">
+                      <div onClick="{{ i.onClick }}" style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 5px; cursor: pointer;" style-hover="background: #fff6f2;">
+                        <span style="flex: 1; font-size: 12px; color: #2F323B;">{{ i.desc }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </sc-if>
+              <sc-if value="{{ mTemSetorSelecionado }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <div onClick="{{ mSetorSelecionadoChip.onClick }}" style="display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: #fff6f2; border: 1px solid #F15A22; color: #F15A22; font-size: 12px; cursor: pointer; flex: 0 0 auto; width: fit-content;">
+                    <span>{{ mSetorSelecionadoChip.label }}</span><span style="font-size: 9px;">✕</span>
+                  </div>
+                </div>
+                <span onClick="{{ onExpandirSetor }}" style="font-size: 10.5px; color: #A09BA2; text-decoration: underline; cursor: pointer;">usar CNAEs individuais</span>
+              </sc-if>
+            </div>
+
+            <div data-dd="msetorcomparar" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 7;">
+              <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Comparar com (até 6 no total)</div>
+              <sc-if value="{{ hasMSetoresComparar }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <sc-for list="{{ mSetorCompararChips }}" as="c" hint-placeholder-count="3">
+                    <div onClick="{{ c.onClick }}" style="display: flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; background: #fff6f2; border: 1px solid #F15A22; color: #F15A22; font-size: 11.5px; cursor: pointer; flex: 0 0 auto;">
+                      <span>{{ c.label }}</span><span style="font-size: 9px;">✕</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ mPodeCompararMais }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px; background: #fff;">
+                  <span style="color: #A09BA2; font-size: 12px;">⌕</span>
+                  <input value="{{ mSetorCompararQuery }}" onChange="{{ onMSetorCompararQuery }}" placeholder="energia, óleo e gás…" style="border: none; outline: none; flex: 1; min-width: 0; font-family: 'Open Sans', sans-serif; font-size: 12.5px; color: #000; background: transparent;">
+                  <span onClick="{{ onToggleMSetorComparar }}" style="cursor: pointer; color: #A09BA2; font-size: 10px;">{{ mSetorCompararCaret }}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ mSetorCompararListOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 260px; overflow: auto; padding: 6px; z-index: 30;">
+                  <sc-for list="{{ mSetorCompararList }}" as="i" hint-placeholder-count="5">
+                    <div onClick="{{ i.onClick }}" style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 5px; cursor: pointer;" style-hover="background: #fff6f2;">
+                      <span style="flex: 1; font-size: 12px; color: #2F323B;">{{ i.desc }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+
+            <sc-if value="{{ mostraFiltroMunicipio }}" hint-placeholder-val="{{ false }}">
+              <div data-dd="mmeso" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 7;">
+                <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Mesorregião</div>
+                <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px; background: #fff;">
+                  <span style="color: #A09BA2; font-size: 12px;">⌕</span>
+                  <input value="{{ mMesorregiaoQuery }}" onChange="{{ onMMesorregiaoQuery }}" placeholder="norte fluminense…" style="border: none; outline: none; flex: 1; min-width: 0; font-family: 'Open Sans', sans-serif; font-size: 12.5px; color: #000; background: transparent;">
+                  <span onClick="{{ onToggleMMesorregiao }}" style="cursor: pointer; color: #A09BA2; font-size: 10px;">{{ mMesorregiaoCaret }}</span>
+                </div>
+                <sc-if value="{{ mMesorregiaoListOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 220px; overflow: auto; padding: 6px; z-index: 30;">
+                    <sc-for list="{{ mMesorregiaoList }}" as="i" hint-placeholder-count="5">
+                      <div onClick="{{ i.onClick }}" style="padding: 8px 9px; border-radius: 5px; cursor: pointer; font-size: 12px; color: #2F323B;" style-hover="background: #fff6f2;">{{ i.desc }}</div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <div style="font-size: 10.5px; color: #A09BA2; line-height: 1.4;">Selecione o(s) estado(s) primeiro.</div>
+              </div>
+
+              <div data-dd="mmunicipio" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 7;">
+                <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Município</div>
+                <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px; background: #fff;">
+                  <span style="color: #A09BA2; font-size: 12px;">⌕</span>
+                  <input value="{{ mMunicipioQuery }}" onChange="{{ onMMunicipioQuery }}" placeholder="nome do município…" style="border: none; outline: none; flex: 1; min-width: 0; font-family: 'Open Sans', sans-serif; font-size: 12.5px; color: #000; background: transparent;">
+                  <span onClick="{{ onToggleMMunicipio }}" style="cursor: pointer; color: #A09BA2; font-size: 10px;">{{ mMunicipioCaret }}</span>
+                </div>
+                <sc-if value="{{ mMunicipioListOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 220px; overflow: auto; padding: 6px; z-index: 30;">
+                    <sc-for list="{{ mMunicipioList }}" as="i" hint-placeholder-count="5">
+                      <div onClick="{{ i.onClick }}" style="{{ i.style }}">
+                        <div style="{{ i.box }}">{{ i.tick }}</div>
+                        <span style="flex: 1; font-size: 12px; color: #2F323B;">{{ i.desc }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 4px; max-height: 84px; overflow-y: auto; padding-right: 2px;">
+                  <sc-for list="{{ mMunicipioPills }}" as="p" hint-placeholder-count="2">
+                    <div onClick="{{ p.onClick }}" style="display: flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px; background: #fff6f2; border: 1px solid #F15A22; color: #F15A22; font-size: 11.5px; cursor: pointer; flex: 0 0 auto;">
+                      <span>{{ p.label }}</span><span style="font-size: 10px;">✕</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <div data-dd="mcnae" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 6;">
+              <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Segmento (CNAE)</div>
+              <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px; background: #fff;">
+                <span style="color: #A09BA2; font-size: 12px;">⌕</span>
+                <input value="{{ mCnaeQuery }}" onChange="{{ onMCnaeQuery }}" placeholder="código ou atividade" style="border: none; outline: none; flex: 1; min-width: 0; font-family: 'Open Sans', sans-serif; font-size: 12.5px; color: #000; background: transparent;">
+                <span onClick="{{ onToggleMCnae }}" style="cursor: pointer; color: #A09BA2; font-size: 10px;">{{ mCnaeCaret }}</span>
+              </div>
+              <sc-if value="{{ mCnaeListOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 320px; overflow: auto; padding: 6px; z-index: 30;">
+                  <sc-for list="{{ mCnaeList }}" as="c" hint-placeholder-count="6">
+                    <div onClick="{{ c.onClick }}" style="{{ c.style }}">
+                      <div style="{{ c.box }}">{{ c.tick }}</div>
+                      <span style="flex: 0 0 56px; font-family: ui-monospace, monospace; font-size: 10.5px; color: #F15A22;">{{ c.code }}</span>
+                      <span style="flex: 1; font-size: 11.5px; color: #2F323B; line-height: 1.4;">{{ c.desc }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div style="display: flex; flex-wrap: wrap; gap: 5px; min-height: 4px; max-height: 100px; overflow-y: auto; padding-right: 2px;">
+                <sc-for list="{{ mCnaePills }}" as="p" hint-placeholder-count="2">
+                  <div onClick="{{ p.onClick }}" style="display: flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; background: #fff6f2; border: 1px solid #F15A22; color: #F15A22; font-size: 11px; cursor: pointer; flex: 0 0 auto;">
+                    <span>{{ p.label }}</span><span style="font-size: 9px;">✕</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="{{ mercadoDropsGrid }}">
+              <sc-for list="{{ mercadoDrops }}" as="d" hint-placeholder-count="4">
+                <div data-dd="mercado" style="position: relative; display: flex; flex-direction: column; gap: 6px;">
+                  <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">{{ d.label }}</div>
+                  <div onClick="{{ d.onToggle }}" style="{{ d.headStyle }}">
+                    <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ d.summary }}</span>
+                    <span style="color: #A09BA2; font-size: 10px;">{{ d.caret }}</span>
+                  </div>
+                  <sc-if value="{{ d.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 250px; overflow: auto; padding: 6px; z-index: 30;">
+                      <sc-for list="{{ d.items }}" as="i" hint-placeholder-count="6">
+                        <div onClick="{{ i.onClick }}" style="{{ i.style }}">
+                          <div style="{{ i.box }}">{{ i.tick }}</div>
+                          <span style="flex: 1;">{{ i.label }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">CNPJ específico</div>
+              <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px;">
+                <span style="color: #A09BA2; font-size: 13px;">⌕</span>
+                <input value="{{ cnpjQuery }}" onChange="{{ onCnpjQuery }}" placeholder="00.000.000/0000-00" style="border: none; outline: none; flex: 1; font-family: ui-monospace, monospace; font-size: 12px; color: #000; background: transparent;">
+              </div>
+              <sc-if value="{{ mercadoRecorteLabel }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size: 11px; color: #6c6c6c;">{{ mercadoRecorteLabel }}</div>
+              </sc-if>
+            </div>
+
+            <sc-if value="{{ mercadoFiltroDesatualizado }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #fff6f2; border: 1px solid #F15A22; border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; font-size: 11.5px; color: #2F323B; line-height: 1.4;">
+                <span style="font-weight: 700; color: #F15A22;">⚠</span>
+                <span>Os filtros mudaram — clique em "Carregar mapa" para atualizar.</span>
+              </div>
+            </sc-if>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 6px; border-top: 1px solid #e3e5e8;">
+              <div onClick="{{ onCarregarMapa }}" style="{{ carregarMapaBtnStyle }} text-align: center;" style-hover="background: #E75613;">{{ carregarMapaBtnLabel }}</div>
+              <div onClick="{{ onUsarNaBusca }}" style="background: #F15A22; color: #fff; border-radius: 999px; padding: 10px 20px; font-family: 'Neo Sans Pro', sans-serif; font-weight: 700; font-size: 12.5px; text-align: center; cursor: pointer;" style-hover="background: #E75613;">Gerar lista deste perfil</div>
+              <div onClick="{{ onSalvarPerfil }}" style="border: 1px solid #d8dbdf; border-radius: 999px; padding: 9px 18px; font-size: 12.5px; color: #2F323B; text-align: center; cursor: pointer;" style-hover="border-color: #F15A22; color: #F15A22;">Salvar perfil</div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
 
     <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; background: #F5F5F5; position: relative;">
 
@@ -779,231 +1002,6 @@ a:hover { opacity: .75; }
         <sc-if value="{{ isMercado }}" hint-placeholder-val="{{ false }}">
           <div style="padding: 20px 28px 32px; display: flex; flex-direction: column; gap: 16px;">
 
-            <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 14px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-              <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Escopo do estudo</div>
-              <div style="display: flex; gap: 8px;">
-                <sc-for list="{{ escopos }}" as="e" hint-placeholder-count="2">
-                  <div onClick="{{ e.onClick }}" style="{{ e.style }}">{{ e.label }}</div>
-                </sc-for>
-              </div>
-              <div style="width: 1px; height: 24px; background: #e3e5e8;"></div>
-              <sc-for list="{{ topDrops }}" as="d" hint-placeholder-count="2">
-                <div data-dd="top" style="position: relative; display: flex; align-items: center; gap: 8px; z-index: 10;">
-                  <div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700; white-space: nowrap;">{{ d.label }}</div>
-                  <div onClick="{{ d.onToggle }}" style="{{ d.headStyle }}">
-                    <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ d.summary }}</span>
-                    <span style="color: #A09BA2; font-size: 10px;">{{ d.caret }}</span>
-                  </div>
-                  <sc-if value="{{ d.open }}" hint-placeholder-val="{{ false }}">
-                    <div style="position: absolute; top: 100%; right: 0; margin-top: 4px; min-width: 280px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); padding: 6px; z-index: 40;">
-                      <sc-for list="{{ d.items }}" as="i" hint-placeholder-count="4">
-                        <div onClick="{{ i.onClick }}" style="{{ i.style }}">
-                          <div style="{{ i.box }}"></div>
-                          <span style="flex: 1;">{{ i.label }}</span>
-                          <span style="font-size: 11px; color: #A09BA2;">{{ i.hint }}</span>
-                        </div>
-                      </sc-for>
-                    </div>
-                  </sc-if>
-                </div>
-              </sc-for>
-              <div style="font-size: 12px; color: #2F323B; font-weight: 600; white-space: nowrap; margin-left: 4px;">{{ escopoScopeLabel }}</div>
-            </div>
-
-            <!-- barra recolhida: some assim que "Carregar mapa" é clicado, deixando o mapa
-                 com mais espaço; clicar nela (ou no botão "editar filtros") reabre o painel
-                 completo abaixo. Os dois blocos ficam sempre no DOM — só alterna o "display"
-                 via style computado (mesmo mecanismo já usado em headStyle/carregarMapaBtnStyle
-                 etc. neste arquivo), em vez de montar/desmontar condicionalmente. -->
-            <div onClick="{{ onExpandirFiltros }}" style="{{ mFiltrosRecolhidosStyle }}" style-hover="border-color: #F15A22;">
-              <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14px; font-weight: 700; color: #000; white-space: nowrap;">Perfil de empresas</div>
-              <div style="font-size: 12px; color: #6c6c6c; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ mercadoRecorteResumo }}</div>
-              <div style="font-size: 12px; color: #F15A22; font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 4px;">
-                <span>editar filtros</span><span>▾</span>
-              </div>
-            </div>
-            <div style="{{ mFiltrosExpandidoStyle }}">
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000;">Perfil de empresas</div>
-                <div style="font-size: 11.5px; color: #A09BA2;">{{ escopoHelp }}</div>
-              </div>
-              <div data-dd="msetor" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 8; max-width: 420px;">
-                <div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Setor (considera CNAE principal ou secundário da empresa)</div>
-                <sc-if value="{{ mSemSetorSelecionado }}" hint-placeholder-val="{{ false }}">
-                  <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px; background: #fff;">
-                    <span style="color: #A09BA2; font-size: 12px;">⌕</span>
-                    <input value="{{ mSetorQuery }}" onChange="{{ onMSetorQuery }}" placeholder="ex.: mineração, florestal, transporte…" style="border: none; outline: none; flex: 1; min-width: 0; font-family: 'Open Sans', sans-serif; font-size: 12.5px; color: #000; background: transparent;">
-                    <span onClick="{{ onToggleMSetor }}" style="cursor: pointer; color: #A09BA2; font-size: 10px;">{{ mSetorCaret }}</span>
-                  </div>
-                  <sc-if value="{{ mSetorListOpen }}" hint-placeholder-val="{{ false }}">
-                    <div style="position: absolute; top: 100%; left: 0; width: 420px; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 260px; overflow: auto; padding: 6px; z-index: 30;">
-                      <sc-for list="{{ mSetorList }}" as="i" hint-placeholder-count="5">
-                        <div onClick="{{ i.onClick }}" style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 5px; cursor: pointer;" style-hover="background: #fff6f2;">
-                          <span style="flex: 1; font-size: 12px; color: #2F323B;">{{ i.desc }}</span>
-                        </div>
-                      </sc-for>
-                    </div>
-                  </sc-if>
-                </sc-if>
-                <sc-if value="{{ mTemSetorSelecionado }}" hint-placeholder-val="{{ false }}">
-                  <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <div onClick="{{ mSetorSelecionadoChip.onClick }}" style="display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: #fff6f2; border: 1px solid #F15A22; color: #F15A22; font-size: 12px; cursor: pointer; flex: 0 0 auto; width: fit-content;">
-                      <span>{{ mSetorSelecionadoChip.label }}</span><span style="font-size: 9px;">✕</span>
-                    </div>
-                    <span onClick="{{ onExpandirSetor }}" style="font-size: 11px; color: #A09BA2; text-decoration: underline; cursor: pointer;">usar CNAEs individuais (pra remover algum)</span>
-                  </div>
-                </sc-if>
-              </div>
-
-              <div data-dd="msetorcomparar" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 7; max-width: 420px;">
-                <div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Comparar com outros setores no mapa (opcional — até 6 no total)</div>
-                <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px; background: #fff;">
-                  <span style="color: #A09BA2; font-size: 12px;">⌕</span>
-                  <input value="{{ mSetorCompararQuery }}" onChange="{{ onMSetorCompararQuery }}" placeholder="ex.: energia, óleo e gás…" style="border: none; outline: none; flex: 1; min-width: 0; font-family: 'Open Sans', sans-serif; font-size: 12.5px; color: #000; background: transparent;">
-                  <span onClick="{{ onToggleMSetorComparar }}" style="cursor: pointer; color: #A09BA2; font-size: 10px;">{{ mSetorCompararCaret }}</span>
-                </div>
-                <sc-if value="{{ mSetorCompararListOpen }}" hint-placeholder-val="{{ false }}">
-                  <div style="position: absolute; top: 100%; left: 0; width: 420px; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 260px; overflow: auto; padding: 6px; z-index: 30;">
-                    <sc-for list="{{ mSetorCompararList }}" as="i" hint-placeholder-count="5">
-                      <div onClick="{{ i.onClick }}" style="display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 5px; cursor: pointer;" style-hover="background: #fff6f2;">
-                        <span style="flex: 1; font-size: 12px; color: #2F323B;">{{ i.desc }}</span>
-                      </div>
-                    </sc-for>
-                  </div>
-                </sc-if>
-                <sc-if value="{{ hasMSetoresComparar }}" hint-placeholder-val="{{ false }}">
-                  <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                    <sc-for list="{{ mSetorCompararChips }}" as="c" hint-placeholder-count="3">
-                      <div onClick="{{ c.onClick }}" style="display: flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; background: #fff6f2; border: 1px solid #F15A22; color: #F15A22; font-size: 11.5px; cursor: pointer; flex: 0 0 auto;">
-                        <span>{{ c.label }}</span><span style="font-size: 9px;">✕</span>
-                      </div>
-                    </sc-for>
-                  </div>
-                </sc-if>
-              </div>
-
-              <sc-if value="{{ mostraFiltroMunicipio }}" hint-placeholder-val="{{ false }}">
-                <div style="display: flex; gap: 14px; flex-wrap: wrap;">
-                  <div data-dd="mmeso" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 7; flex: 1; min-width: 220px; max-width: 380px;">
-                    <div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Mesorregião (atalho — marca vários municípios de uma vez)</div>
-                    <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px; background: #fff;">
-                      <span style="color: #A09BA2; font-size: 12px;">⌕</span>
-                      <input value="{{ mMesorregiaoQuery }}" onChange="{{ onMMesorregiaoQuery }}" placeholder="ex.: norte fluminense…" style="border: none; outline: none; flex: 1; min-width: 0; font-family: 'Open Sans', sans-serif; font-size: 12.5px; color: #000; background: transparent;">
-                      <span onClick="{{ onToggleMMesorregiao }}" style="cursor: pointer; color: #A09BA2; font-size: 10px;">{{ mMesorregiaoCaret }}</span>
-                    </div>
-                    <sc-if value="{{ mMesorregiaoListOpen }}" hint-placeholder-val="{{ false }}">
-                      <div style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 220px; overflow: auto; padding: 6px; z-index: 30;">
-                        <sc-for list="{{ mMesorregiaoList }}" as="i" hint-placeholder-count="5">
-                          <div onClick="{{ i.onClick }}" style="padding: 8px 9px; border-radius: 5px; cursor: pointer; font-size: 12px; color: #2F323B;" style-hover="background: #fff6f2;">{{ i.desc }}</div>
-                        </sc-for>
-                      </div>
-                    </sc-if>
-                    <div style="font-size: 11px; color: #A09BA2;">Selecione o(s) estado(s) em "Estados" primeiro — a busca usa os estados já marcados.</div>
-                  </div>
-
-                  <div data-dd="mmunicipio" style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 7; flex: 1; min-width: 220px; max-width: 380px;">
-                    <div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Município</div>
-                    <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px; background: #fff;">
-                      <span style="color: #A09BA2; font-size: 12px;">⌕</span>
-                      <input value="{{ mMunicipioQuery }}" onChange="{{ onMMunicipioQuery }}" placeholder="digite o nome do município…" style="border: none; outline: none; flex: 1; min-width: 0; font-family: 'Open Sans', sans-serif; font-size: 12.5px; color: #000; background: transparent;">
-                      <span onClick="{{ onToggleMMunicipio }}" style="cursor: pointer; color: #A09BA2; font-size: 10px;">{{ mMunicipioCaret }}</span>
-                    </div>
-                    <sc-if value="{{ mMunicipioListOpen }}" hint-placeholder-val="{{ false }}">
-                      <div style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 220px; overflow: auto; padding: 6px; z-index: 30;">
-                        <sc-for list="{{ mMunicipioList }}" as="i" hint-placeholder-count="5">
-                          <div onClick="{{ i.onClick }}" style="{{ i.style }}">
-                            <div style="{{ i.box }}">{{ i.tick }}</div>
-                            <span style="flex: 1; font-size: 12px; color: #2F323B;">{{ i.desc }}</span>
-                          </div>
-                        </sc-for>
-                      </div>
-                    </sc-if>
-                    <div style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 4px; max-height: 68px; overflow-y: auto; padding-right: 2px;">
-                      <sc-for list="{{ mMunicipioPills }}" as="p" hint-placeholder-count="2">
-                        <div onClick="{{ p.onClick }}" style="display: flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px; background: #fff6f2; border: 1px solid #F15A22; color: #F15A22; font-size: 11.5px; cursor: pointer; flex: 0 0 auto;">
-                          <span>{{ p.label }}</span><span style="font-size: 10px;">✕</span>
-                        </div>
-                      </sc-for>
-                    </div>
-                  </div>
-                </div>
-              </sc-if>
-
-              <div style="{{ mercadoDropsGrid }}">
-                <div data-dd="mcnae" style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 6;">
-                  <div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Segmento (CNAE)</div>
-                  <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px; background: #fff; max-width: 420px;">
-                    <span style="color: #A09BA2; font-size: 12px;">⌕</span>
-                    <input value="{{ mCnaeQuery }}" onChange="{{ onMCnaeQuery }}" placeholder="código ou atividade" style="border: none; outline: none; flex: 1; min-width: 0; font-family: 'Open Sans', sans-serif; font-size: 12.5px; color: #000; background: transparent;">
-                    <span onClick="{{ onToggleMCnae }}" style="cursor: pointer; color: #A09BA2; font-size: 10px;">{{ mCnaeCaret }}</span>
-                  </div>
-                  <sc-if value="{{ mCnaeListOpen }}" hint-placeholder-val="{{ false }}">
-                    <div style="position: absolute; top: 100%; left: 0; margin-top: 4px; width: 420px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 320px; overflow: auto; padding: 6px; z-index: 30;">
-                      <sc-for list="{{ mCnaeList }}" as="c" hint-placeholder-count="6">
-                        <div onClick="{{ c.onClick }}" style="{{ c.style }}">
-                          <div style="{{ c.box }}">{{ c.tick }}</div>
-                          <span style="flex: 0 0 64px; font-family: ui-monospace, monospace; font-size: 11.5px; color: #F15A22;">{{ c.code }}</span>
-                          <span style="flex: 1; font-size: 12px; color: #2F323B; line-height: 1.4;">{{ c.desc }}</span>
-                        </div>
-                      </sc-for>
-                    </div>
-                  </sc-if>
-                  <!-- caixa dos segmentos selecionados ocupa a linha toda (grid-column acima) —
-                       antes ficava espremida na largura de um dropdown comum e só dava pra ler
-                       o código, não a descrição -->
-                  <div style="display: flex; flex-wrap: wrap; gap: 5px; min-height: 4px; max-height: 100px; overflow-y: auto; padding-right: 2px;">
-                    <sc-for list="{{ mCnaePills }}" as="p" hint-placeholder-count="2">
-                      <div onClick="{{ p.onClick }}" style="display: flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; background: #fff6f2; border: 1px solid #F15A22; color: #F15A22; font-size: 11px; cursor: pointer; flex: 0 0 auto;">
-                        <span>{{ p.label }}</span><span style="font-size: 9px;">✕</span>
-                      </div>
-                    </sc-for>
-                  </div>
-                </div>
-                <sc-for list="{{ mercadoDrops }}" as="d" hint-placeholder-count="4">
-                  <div data-dd="mercado" style="position: relative; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">{{ d.label }}</div>
-                    <div onClick="{{ d.onToggle }}" style="{{ d.headStyle }}">
-                      <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ d.summary }}</span>
-                      <span style="color: #A09BA2; font-size: 10px;">{{ d.caret }}</span>
-                    </div>
-                    <sc-if value="{{ d.open }}" hint-placeholder-val="{{ false }}">
-                      <div style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #FFFFFF; border: 1px solid #d8dbdf; border-radius: 6px; box-shadow: 0 8px 24px rgba(17,15,12,.12); max-height: 250px; overflow: auto; padding: 6px; z-index: 30; min-width: 200px;">
-                        <sc-for list="{{ d.items }}" as="i" hint-placeholder-count="6">
-                          <div onClick="{{ i.onClick }}" style="{{ i.style }}">
-                            <div style="{{ i.box }}">{{ i.tick }}</div>
-                            <span style="flex: 1;">{{ i.label }}</span>
-                          </div>
-                        </sc-for>
-                      </div>
-                    </sc-if>
-                  </div>
-                </sc-for>
-              </div>
-              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <div style="display: flex; align-items: center; gap: 10px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 12px; flex: 0 0 300px;">
-                  <span style="color: #A09BA2; font-size: 13px;">⌕</span>
-                  <input value="{{ cnpjQuery }}" onChange="{{ onCnpjQuery }}" placeholder="CNPJ específico — 00.000.000/0000-00" style="border: none; outline: none; flex: 1; font-family: ui-monospace, monospace; font-size: 12px; color: #000; background: transparent;">
-                </div>
-                <sc-if value="{{ mercadoRecorteLabel }}" hint-placeholder-val="{{ false }}">
-                  <div style="font-size: 12px; color: #6c6c6c;">{{ mercadoRecorteLabel }}</div>
-                </sc-if>
-                <div style="flex: 1;"></div>
-                <div onClick="{{ onCarregarMapa }}" style="{{ carregarMapaBtnStyle }}" style-hover="background: #E75613;">{{ carregarMapaBtnLabel }}</div>
-                <div onClick="{{ onSalvarPerfil }}" style="border: 1px solid #d8dbdf; border-radius: 999px; padding: 9px 18px; font-size: 12.5px; color: #2F323B; cursor: pointer;" style-hover="border-color: #F15A22; color: #F15A22;">Salvar perfil</div>
-                <div onClick="{{ onUsarNaBusca }}" style="background: #F15A22; color: #fff; border-radius: 999px; padding: 10px 20px; font-family: 'Neo Sans Pro', sans-serif; font-weight: 700; font-size: 12.5px; cursor: pointer;" style-hover="background: #E75613;">Gerar lista deste perfil</div>
-              </div>
-              <sc-if value="{{ mercadoFiltroDesatualizado }}" hint-placeholder-val="{{ false }}">
-                <div style="background: #fff6f2; border: 1px solid #F15A22; border-radius: 8px; padding: 12px 18px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #2F323B;">
-                  <span style="font-weight: 700; color: #F15A22;">⚠</span>
-                  <span style="flex: 1;">Os filtros mudaram desde o último carregamento — o mapa abaixo ainda mostra o recorte anterior. Clique em "Carregar mapa" para atualizar.</span>
-                </div>
-              </sc-if>
-              <div style="display: flex; justify-content: center;">
-                <div onClick="{{ onRecolherFiltros }}" style="font-size: 12px; color: #F15A22; font-weight: 600; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 4px;" style-hover="color: #E75613;">
-                  <span>▴</span><span>recolher</span>
-                </div>
-              </div>
-            </div>
 
             <div style="display: grid; grid-template-columns: 268px minmax(0, 1fr); gap: 16px; align-items: start;">
               <div style="display: flex; flex-direction: column; gap: 14px;">
@@ -1647,7 +1645,7 @@ class Component extends DCLogic {
       savedActive: '',
       segmentacoesSalvas: [],
       mEscopo: 'nacional',
-      mFiltrosRecolhidos: false,
+      mFiltroPainelRecolhido: false,
       mMode: 'calor',
       mMetric: 'total',
       mCnaes: [],
@@ -2721,7 +2719,7 @@ class Component extends DCLogic {
   aplicarRaio() {
     const st = this.state;
     if (!st.mRaioCentro || st.mCarregando || st.mComparandoSetores) return;
-    this.setState({ mFiltrosRecolhidos: true, mRaioBarraRecolhida: false });
+    this.setState({ mFiltroPainelRecolhido: true, mRaioBarraRecolhida: false });
     // avisa o próximo paintMap() completo (disparado pela busca abaixo) pra
     // aproximar o mapa na área do raio, em vez de manter o zoom/escopo anterior
     this._zoomParaRaioPendente = true;
@@ -3809,7 +3807,7 @@ class Component extends DCLogic {
       label, open, caret: open ? '▴' : '▾',
       summary: cur && cur !== '—' ? (options.find(o => (o.value || o) === cur) || {}).label || cur : (allLabel || 'Todos'),
       onToggle: (e) => { e.stopPropagation(); this.setState({ open: open ? null : id, cnaeListOpen: false }); },
-      headStyle: 'display: flex; align-items: center; gap: 8px; border: 1px solid ' + (open ? ORANGE : '#d8dbdf') + '; border-radius: 6px; padding: 8px 11px; font-size: 12.5px; color: #2F323B; cursor: pointer; background: #fff; width: 152px;',
+      headStyle: 'display: flex; align-items: center; gap: 8px; border: 1px solid ' + (open ? ORANGE : '#d8dbdf') + '; border-radius: 6px; padding: 8px 11px; font-size: 12.5px; color: #2F323B; cursor: pointer; background: #fff; width: 100%;',
       items: options.map(o => {
         const v = o.value || o, l = o.label || o;
         const on = cur === v;
@@ -4319,7 +4317,7 @@ class Component extends DCLogic {
           { value: 'gap', label: 'Só quem não é cliente' }
         ], 'mMetric', null, null)
       ],
-      mercadoDropsGrid: 'display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: start;',
+      mercadoDropsGrid: 'display: flex; flex-direction: column; gap: 14px;',
       escopoScopeLabel: st.mEscopo === 'nacional' ? 'Brasil — 27 UFs' : shownUfs.length + (shownUfs.length === 1 ? ' estado no mapa' : ' estados no mapa'),
       mRaioSelecionando: st.mRaioSelecionando,
       mRaioSemCentro: !st.mRaioCentro,
@@ -4470,16 +4468,27 @@ class Component extends DCLogic {
         const comparando = this.setoresComparacaoAtivos().length >= 2;
         if (st.mCarregando || st.mComparandoSetores) return;
         if (st.mEscopo === 'regional' && this.shownUfs().length === 0) return;
-        // recolhe os filtros assim que carrega — o mapa é o que importa depois disso,
-        // e o painel gigante de filtros só voltava a fazer falta se o usuário quisesse
-        // ajustar de novo (daí o botão pra reabrir, na barra recolhida)
-        this.setState({ mFiltrosRecolhidos: true });
+        // recolhe o painel lateral assim que carrega — o mapa é o que importa
+        // depois disso, e o painel gigante de filtros só volta a fazer falta
+        // se o usuário quiser ajustar de novo (daí o ícone pra reabrir)
+        this.setState({ mFiltroPainelRecolhido: true });
         if (comparando) this.compararSetoresNoMapa(); else this.carregarEstudoMercado();
       },
-      onExpandirFiltros: () => this.setState({ mFiltrosRecolhidos: false }),
-      onRecolherFiltros: (e) => { e.stopPropagation(); this.setState({ mFiltrosRecolhidos: true }); },
-      mFiltrosRecolhidosStyle: 'background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 12px 20px; align-items: center; gap: 12px; cursor: pointer; display: ' + (st.mFiltrosRecolhidos ? 'flex' : 'none') + ';',
-      mFiltrosExpandidoStyle: 'background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 18px 20px; flex-direction: column; gap: 14px; display: ' + (st.mFiltrosRecolhidos ? 'none' : 'flex') + ';',
+      // painel lateral de filtros (substitui a antiga barra no topo do mapa —
+      // em notebook ela tomava espaço demais antes mesmo de ver o mapa). Fica
+      // encostado no menu principal (chumbo), com o próprio ícone de
+      // recolher/expandir — mesma ideia da barra do raio, só que persistente
+      // (não recolhe sozinho, só quando o usuário pede ou ao carregar o mapa).
+      mFiltroPainelExpandido: !st.mFiltroPainelRecolhido,
+      onTogglePainelFiltro: () => this.setState({ mFiltroPainelRecolhido: !st.mFiltroPainelRecolhido }),
+      painelFiltroToggleIcon: st.mFiltroPainelRecolhido ? '»' : '«',
+      painelFiltroToggleHint: st.mFiltroPainelRecolhido ? 'Expandir filtros' : 'Recolher filtros',
+      painelFiltroToggleStyle: 'width: 26px; height: 26px; flex: 0 0 26px; border-radius: 6px; border: 1px solid #d8dbdf; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: #2F323B;',
+      painelFiltroContainerStyle: 'background: #FFFFFF; border-right: 1px solid #e3e5e8; flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; transition: width .2s ease; width: ' +
+        (st.mFiltroPainelRecolhido ? '48px' : '300px') + ';',
+      painelFiltroHeaderStyle: 'display: flex; align-items: center; padding: 14px 12px; border-bottom: 1px solid #e3e5e8; flex: 0 0 auto; justify-content: ' +
+        (st.mFiltroPainelRecolhido ? 'center' : 'space-between') + ';',
+      mPodeCompararMais: st.mSetoresComparar.length < 6,
       carregarMapaBtnLabel: (st.mCarregando || st.mComparandoSetores) ? 'Carregando…' : (this.setoresComparacaoAtivos().length >= 2 ? 'Comparar setores no mapa' : 'Carregar mapa'),
       carregarMapaBtnStyle: 'border-radius: 999px; padding: 10px 20px; font-family: \'Neo Sans Pro\', sans-serif; font-weight: 700; font-size: 12.5px; ' +
         ((st.mCarregando || st.mComparandoSetores || (st.mEscopo === 'regional' && this.shownUfs().length === 0)) ? 'background: #eef0f2; color: #A09BA2; cursor: default;' : 'background: ' + ORANGE + '; color: #FFFFFF; cursor: pointer;'),
