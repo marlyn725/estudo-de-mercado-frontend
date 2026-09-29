@@ -1414,6 +1414,11 @@ a:hover { opacity: .75; }
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1496,&quot;height&quot;:968}}">
 const ORANGE = '#F15A22';
+// cursor customizado (pino de mapa, mesma cor da marca) pro "modo mira" do raio de
+// abrangência — a ponta do pino (canto inferior do desenho) é o hotspot real do
+// clique, por isso o offset "12 30" no cursor CSS bate com a base do SVG (32px de
+// altura). "crosshair" é o fallback se o navegador não aceitar o cursor customizado.
+const CURSOR_PINO_RAIO = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='32' viewBox='0 0 24 32'%3E%3Cpath d='M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20c0-6.6-5.4-12-12-12z' fill='%23F15A22' stroke='white' stroke-width='1.5'/%3E%3Ccircle cx='12' cy='12' r='4' fill='white'/%3E%3C/svg%3E\") 12 30, crosshair";
 // nível de zoom (T.k do d3.zoom) a partir do qual o mapa NACIONAL revela contorno e
 // nome de município (só usado no modo dispersão — calor/concentração usam
 // MUN_FILL_ZOOM abaixo) — abaixo disso ficaria poluído (27 estados x milhares de nomes)
@@ -2588,12 +2593,21 @@ class Component extends DCLogic {
   /* ---------- raio de abrangência ---------- */
   // liga o "modo mira": o próximo clique no mapa (em qualquer zoom, nacional ou
   // regional) vira o centro do raio, em vez de abrir o ponto/estado clicado
+  // troca o cursor do mapa direto no elemento (sem esperar um repaint completo,
+  // que não acontece ao entrar/sair do modo mira) — mesma ideia de
+  // redesenharRaioLeve, só que pro cursor em vez do canvas
+  atualizarCursorMapa(selecionando) {
+    if (this._mapCanvas) this._mapCanvas.style.cursor = selecionando ? CURSOR_PINO_RAIO : 'grab';
+  }
+
   iniciarSelecaoRaio() {
     this.setState({ mRaioSelecionando: true, open: null });
+    this.atualizarCursorMapa(true);
   }
 
   cancelarSelecaoRaio() {
     this.setState({ mRaioSelecionando: false });
+    this.atualizarCursorMapa(false);
   }
 
   // desenha só o círculo/pino por cima do que já está na tela, reaproveitando o
@@ -2615,6 +2629,7 @@ class Component extends DCLogic {
       mRaioSelecionando: false, mRaioCentro: { lat, lon },
       mUfs: [], mRegioes: [], mMunicipioQuery: ''
     }, () => this.redesenharRaioLeve());
+    this.atualizarCursorMapa(false);
     this.atualizarRaioKm(this.state.mRaioKm || 50, { lat, lon });
   }
 
@@ -3199,9 +3214,10 @@ class Component extends DCLogic {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const canvas = document.createElement('canvas');
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-    canvas.style.cssText = 'width:' + w + 'px;height:' + h + 'px;display:block;cursor:grab';
+    canvas.style.cssText = 'width:' + w + 'px;height:' + h + 'px;display:block;cursor:' + (this.state.mRaioSelecionando ? CURSOR_PINO_RAIO : 'grab');
     el.appendChild(canvas);
     const ctx = canvas.getContext('2d');
+    this._mapCanvas = canvas;
 
     // campo de calor contínuo — nada de polígono de município aqui. Pinta os estados do
     // recorte com a cor "fria" (início da rampa) e, por cima, só onde já existe forma
@@ -3482,8 +3498,10 @@ class Component extends DCLogic {
       const mx = (ev.offsetX - T.x) / T.k, my = (ev.offsetY - T.y) / T.k;
 
       // 0) "modo mira" do raio de abrangência: o próximo clique define o centro,
-      // em qualquer zoom/escopo — não abre ponto nem estado
-      if (st.mRaioSelecionando) {
+      // em qualquer zoom/escopo — não abre ponto nem estado. Lê this.state (não o
+      // `st` capturado no topo de paintMap): entrar no modo mira não refaz o
+      // paintMap, então `st` aqui ficaria sempre desatualizado (sempre "false").
+      if (this.state.mRaioSelecionando) {
         const geo = proj.invert([mx, my]);
         if (geo) this.definirCentroRaio(geo[1], geo[0]); // invert devolve [lon, lat]
         return;
@@ -4119,8 +4137,12 @@ class Component extends DCLogic {
       onIniciarRaio: () => this.iniciarSelecaoRaio(),
       onCancelarRaio: () => this.cancelarSelecaoRaio(),
       raioBtnLabel: st.mRaioSelecionando ? 'Clique no mapa…' : 'Definir raio no mapa',
+      // fundo "vidro fosco" (glassmorphism, tipo iOS) — sem isso o botão ficava
+      // transparente demais e sumia dependendo da cor do mapa por baixo (calor
+      // vermelho, área clara etc.); com blur, sempre tem contraste com o fundo
       raioBtnStyle: 'padding: 8px 14px; border-radius: 999px; font-size: 12px; cursor: pointer; white-space: nowrap; ' +
-        (st.mRaioSelecionando ? 'background: ' + ORANGE + '; color: #fff; font-weight: 600;' : 'border: 1px solid #d8dbdf; color: #2F323B;'),
+        'backdrop-filter: blur(10px) saturate(1.6); -webkit-backdrop-filter: blur(10px) saturate(1.6); box-shadow: 0 2px 10px rgba(17,15,12,.14); ' +
+        (st.mRaioSelecionando ? 'background: rgba(241,90,34,.85); color: #fff; font-weight: 600; border: 1px solid rgba(241,90,34,.9);' : 'background: rgba(255,255,255,.62); color: #2F323B; border: 1px solid rgba(255,255,255,.5);'),
       onMudarRaioKm: (e) => this.agendarAtualizarRaio(parseInt(e.target.value, 10)),
       mRaioKm: st.mRaioKm,
       mRaioKmLabel: st.mRaioKm + ' km',
