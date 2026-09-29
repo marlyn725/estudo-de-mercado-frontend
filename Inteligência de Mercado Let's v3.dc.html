@@ -1074,7 +1074,8 @@ a:hover { opacity: .75; }
                         <input type="range" min="5" max="300" step="5" value="{{ mRaioKm }}" onChange="{{ onMudarRaioKm }}" style="flex: 1; min-width: 140px; max-width: 320px;">
                         <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13.5px; font-weight: 700; color: #000; white-space: nowrap; width: 56px;">{{ mRaioKmLabel }}</div>
                         <div style="font-size: 11.5px; color: #6c6c6c; white-space: nowrap;">{{ mRaioMunicipiosLabel }}</div>
-                        <div onClick="{{ onRemoverRaio }}" style="font-size: 11.5px; color: #F15A22; text-decoration: underline; cursor: pointer; white-space: nowrap;">remover</div>
+                        <div onClick="{{ onAplicarRaio }}" style="{{ aplicarRaioBtnStyle }}">{{ aplicarRaioBtnLabel }}</div>
+                        <div onClick="{{ onRemoverRaio }}" style="font-size: 11.5px; color: #A09BA2; text-decoration: underline; cursor: pointer; white-space: nowrap;">remover</div>
                       </div>
                     </sc-if>
                   </div>
@@ -2595,6 +2596,15 @@ class Component extends DCLogic {
     this.setState({ mRaioSelecionando: false });
   }
 
+  // desenha só o círculo/pino por cima do que já está na tela, reaproveitando o
+  // calor/pontos que o último paintMap() completo já calculou (this._mapDraw,
+  // salvo lá dentro) — não refaz o mapa inteiro. É isso que faz o slider do raio
+  // responder na hora: antes, cada mudança de km forçava um paintMap() completo
+  // (recalcular calor/pontos/heatCanvas do zero), que é caro num recorte amplo.
+  redesenharRaioLeve() {
+    if (this._mapDraw) this._mapDraw();
+  }
+
   // raio SUBSTITUI Município/Mesorregião/Região/Estado — são formas concorrentes
   // de recortar geografia, misturar geraria filtro contraditório (ver decisão
   // com o usuário). Reaproveita mMunicipios (o mesmo campo do filtro manual de
@@ -2604,39 +2614,51 @@ class Component extends DCLogic {
     this.setState({
       mRaioSelecionando: false, mRaioCentro: { lat, lon },
       mUfs: [], mRegioes: [], mMunicipioQuery: ''
-    });
+    }, () => this.redesenharRaioLeve());
     this.atualizarRaioKm(this.state.mRaioKm || 50, { lat, lon });
   }
 
-  // arrastar o slider dispara onChange várias vezes por segundo — cada mudança de
-  // mRaioKm força o mapa inteiro a redesenhar (repintar todos os pontos/labels do
-  // recorte atual, não só o círculo), o que é caro se o recorte tiver muitos
-  // pontos. requestAnimationFrame junta várias mudanças rápidas num redesenho só
-  // por quadro (no máx. ~60/s, geralmente bem menos), em vez de um redesenho
-  // completo por evento — sem isso, arrastar o slider parecia travado.
+  // arrastar o slider dispara onChange várias vezes por segundo — junta essas
+  // mudanças rápidas num redesenho só por quadro de tela (requestAnimationFrame),
+  // e cada redesenho é o LEVE (círculo por cima, ver redesenharRaioLeve), nunca
+  // um paintMap completo.
   agendarAtualizarRaio(km) {
     this._raioKmPendente = km;
     if (!this._raioRaf) {
       this._raioRaf = requestAnimationFrame(() => {
         this._raioRaf = null;
-        this.setState({ mRaioKm: this._raioKmPendente });
+        this.setState({ mRaioKm: this._raioKmPendente }, () => this.redesenharRaioLeve());
       });
     }
     clearTimeout(this._raioT);
     this._raioT = setTimeout(() => this.atualizarRaioKm(this._raioKmPendente), 350);
   }
 
+  // só recalcula QUANTOS municípios entram no raio (consulta leve, só isso) — não
+  // busca os dados do mapa ainda. Isso só acontece quando o usuário clica
+  // "Aplicar raio" (ver aplicarRaio), igual a qualquer outro filtro nesta tela.
   atualizarRaioKm(km, centroOverride) {
     const centro = centroOverride || this.state.mRaioCentro;
     if (!centro) return;
     this.setState({ mRaioCarregando: true });
     apiGet('/api/mercado/municipios-no-raio?lat=' + centro.lat + '&lon=' + centro.lon + '&raio_km=' + km)
-      .then(r => this.setState({ mMunicipios: r.municipios, mRaioCarregando: false, mDataVersion: this.state.mDataVersion + 1 }))
+      .then(r => this.setState({ mMunicipios: r.municipios, mRaioCarregando: false }))
       .catch(e => this.setState({ mRaioCarregando: false, apiError: 'Não foi possível calcular o raio: ' + e.message }));
   }
 
+  // busca de fato os dados do mapa (calor/dispersão/insights) já com o recorte de
+  // municípios do raio — mesmo botão de ação que "Carregar mapa" já faz pra
+  // qualquer outro filtro, só que vindo do controle flutuante do raio
+  aplicarRaio() {
+    const st = this.state;
+    if (!st.mRaioCentro || st.mCarregando || st.mComparandoSetores) return;
+    this.setState({ mFiltrosRecolhidos: true });
+    if (this.setoresComparacaoAtivos().length >= 2) this.compararSetoresNoMapa();
+    else this.carregarEstudoMercado();
+  }
+
   removerRaio() {
-    this.setState({ mRaioCentro: null, mMunicipios: [], mDataVersion: this.state.mDataVersion + 1 });
+    this.setState({ mRaioCentro: null, mMunicipios: [] }, () => this.redesenharRaioLeve());
   }
 
   abrirEstudoRegionalDoEstado(uf) {
@@ -2755,11 +2777,11 @@ class Component extends DCLogic {
     // qualquer outra coisa mudou (trocou filtro/estudo/escopo), a extensão é outra
     // e o zoom antigo não faz mais sentido — reseta.
     const extentKey = [st.mMode, st.mMetric, st.mEscopo, st.mUfs.join(''), st.mRegioes.join(''), st.mCnaes.join(''), el.clientWidth, st.mDataVersion, st.cnpjLocalizado && st.cnpjLocalizado.lat].join('|');
-    // raio (centro+km) fora do extentKey de propósito — arrastar o slider redesenha
-    // o círculo na hora (key muda), mas não deve resetar o zoom/pan atual, só a
-    // troca de filtro/escopo de verdade justifica isso
-    const raioKey = st.mRaioKm + '|' + (st.mRaioCentro ? st.mRaioCentro.lat + ',' + st.mRaioCentro.lon : '') + '|' + st.mRaioSelecionando;
-    const key = extentKey + '|' + (this._munBTick || 0) + '|' + raioKey;
+    // raio (centro/km) NÃO entra nesse key de propósito — mudar o raio nunca
+    // deveria refazer o paintMap inteiro (recalcular calor/pontos do zero); o
+    // círculo é redesenhado à parte, via this._mapDraw() chamado direto pelo
+    // slider (ver agendarAtualizarRaio) — bem mais barato e não reseta o zoom/pan.
+    const key = extentKey + '|' + (this._munBTick || 0);
     if (el.dataset.key === key) return;
     el.dataset.key = key;
     if (this._lastExtentKey !== extentKey) { this._mapT = null; this._lastExtentKey = extentKey; }
@@ -3298,7 +3320,14 @@ class Component extends DCLogic {
           this._desenharPino(ctx, p.x, p.y, r, '#D93025', swPino);
         });
       }
-      if (st.mRaioCentro) {
+      // lê this.state (não o `st` capturado no topo de paintMap) de propósito: esse
+      // bloco também roda via this._mapDraw(), chamado direto pelo slider do raio
+      // SEM refazer todo o paintMap (calor/pontos/heatCanvas) — só assim o círculo
+      // acompanha o arrasto do slider na hora, sem recalcular o mapa inteiro a cada
+      // pixel (era isso que deixava o slider lento).
+      const raioCentroAtual = this.state.mRaioCentro;
+      if (raioCentroAtual) {
+        const raioKmAtual = this.state.mRaioKm;
         // círculo GEOGRÁFICO de verdade (não um círculo em pixel) — calcula pontos
         // reais ao longo da circunferência a {{mRaioKm}} de distância do centro e
         // projeta cada um, senão o círculo saía visualmente distorcido/elíptico
@@ -3306,7 +3335,7 @@ class Component extends DCLogic {
         const N = 72, anelPts = [];
         for (let i = 0; i <= N; i++) {
           const bearing = (360 / N) * i;
-          const destino = pontoDestinoGeo(st.mRaioCentro.lat, st.mRaioCentro.lon, bearing, st.mRaioKm);
+          const destino = pontoDestinoGeo(raioCentroAtual.lat, raioCentroAtual.lon, bearing, raioKmAtual);
           const xy = proj(destino);
           if (xy) anelPts.push(xy);
         }
@@ -3321,7 +3350,7 @@ class Component extends DCLogic {
           ctx.lineWidth = 1.6 / T.k;
           ctx.stroke();
         }
-        const centroXY = proj([st.mRaioCentro.lon, st.mRaioCentro.lat]);
+        const centroXY = proj([raioCentroAtual.lon, raioCentroAtual.lat]);
         if (centroXY) this._desenharPino(ctx, centroXY[0], centroXY[1], 7 / Math.pow(T.k, .5), ORANGE, 1.2 / T.k);
       }
       if (cnpjXY) {
@@ -3400,6 +3429,11 @@ class Component extends DCLogic {
       });
     const sel = d3.select(canvas).call(zoom).on('dblclick.zoom', null);
     if (this._mapT) zoom.transform(sel, this._mapT);
+    // salva a função de desenho "barata" (reaproveita calor/pontos já calculados,
+    // só redesenha por cima) — usada pelo slider do raio pra atualizar o círculo
+    // sem refazer o paintMap inteiro. Precisa ser reatribuída a cada paintMap()
+    // porque `draw` fecha sobre os dados (cells/pts/heatCanvas) DESSA chamada.
+    this._mapDraw = draw;
     draw();
 
     let hoverAt = 0;
@@ -4092,6 +4126,10 @@ class Component extends DCLogic {
       mRaioKmLabel: st.mRaioKm + ' km',
       mRaioMunicipiosLabel: st.mRaioCarregando ? 'calculando…' : fmtInt(st.mMunicipios.length) + ' município(s) no raio',
       onRemoverRaio: () => this.removerRaio(),
+      onAplicarRaio: () => this.aplicarRaio(),
+      aplicarRaioBtnLabel: st.mCarregando ? 'Carregando…' : 'Aplicar raio',
+      aplicarRaioBtnStyle: 'padding: 6px 14px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; cursor: pointer; ' +
+        (st.mCarregando ? 'background: #eef0f2; color: #A09BA2;' : 'background: ' + ORANGE + '; color: #fff;'),
       mCnaeQuery: st.mCnaeQuery,
       mCnaeCaret: st.mCnaeListOpen ? '▴' : '▾',
       onToggleMCnae: (e) => { e.stopPropagation(); this.setState({ mCnaeListOpen: !st.mCnaeListOpen, open: null }); },
