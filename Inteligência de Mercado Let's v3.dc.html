@@ -1055,6 +1055,9 @@ a:hover { opacity: .75; }
                           <div style="{{ l.dot }}"></div><span>{{ l.label }}</span>
                         </div>
                       </sc-for>
+                      <div style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #2F323B;">
+                        <span style="font-size: 13px;">📍</span><span>já é cliente Let's (clique pra ver quais empresas)</span>
+                      </div>
                     </div>
                   </sc-if>
                   <div style="{{ escalaRowStyle }}">
@@ -2716,6 +2719,29 @@ class Component extends DCLogic {
     });
   }
 
+  // "pino" de marcador de mapa (cabeça circular + ponta), usado pra destacar onde
+  // a Let's já tem cliente — a ponta (tipX,tipY) fica sempre EXATAMENTE no ponto
+  // real, a cabeça (raio r, já ajustado pelo chamador conforme o zoom) fica acima.
+  // Zoom mais próximo → r menor → cabeça encolhe até quase sumir na ponta, marcando
+  // o local com precisão; zoom mais distante → r maior → mais fácil de enxergar e clicar.
+  _desenharPino(ctx, tipX, tipY, r, cor, strokeWidth) {
+    const cy = tipY - r * 1.7;
+    const legSpread = r * 0.62;
+    ctx.fillStyle = cor;
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX - legSpread, cy + r * 0.55);
+    ctx.lineTo(tipX + legSpread, cy + r * 0.55);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(tipX, cy, r, 0, 6.2831853);
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = strokeWidth;
+    ctx.stroke();
+  }
+
   paintMap(el) {
     const st = this.state;
     const w = el.clientWidth || 900, h = el.clientHeight || 452;
@@ -2857,13 +2883,25 @@ class Component extends DCLogic {
       }).filter(Boolean);
     }
 
-    // destaque de clientes Let's por cima do mapa (qualquer visualização) — só faz
-    // sentido em visão mista (total/grande porte) de UM setor só; no modo "comparar
-    // setores" cada item já tem seu próprio clientes_lets, um destaque a mais aqui
-    // ficaria ambíguo (destaque de qual setor?)
-    const mostrarClientes = !multiSetor && (st.mMetric === 'total' || st.mMetric === 'grande');
+    // destaque de clientes Let's por cima do mapa — em "comparar setores", cada
+    // item já traz os próprios pontos_clientes (município onde a Let's tem cliente
+    // NAQUELE setor); fora daí, é a visão mista de sempre (total/grande porte)
+    const mostrarClientes = multiSetor
+      ? setoresComparados.some(it => (it.pontos_clientes || []).length)
+      : (st.mMetric === 'total' || st.mMetric === 'grande');
     let clientesPts = [];
-    if (mostrarClientes) {
+    if (multiSetor) {
+      const todosValoresCli = setoresComparados.reduce((a, it) => a.concat((it.pontos_clientes || []).map(p => p.valor)), []);
+      const rmaxCli = Math.max.apply(null, todosValoresCli.concat([1]));
+      setoresComparados.forEach(it => {
+        (it.pontos_clientes || []).forEach(p => {
+          const xy = proj([p.lon, p.lat]);
+          if (!xy) return;
+          const r = 1.5 + 3.5 * Math.sqrt(p.valor / rmaxCli);
+          clientesPts.push({ x: xy[0], y: xy[1], r, valor: p.valor, nome: p.municipio, ibge: p.municipio_ibge, setor: it.setor, setorNome: it.nome });
+        });
+      });
+    } else if (mostrarClientes) {
       const pontosCli = st.mClientesPontos || [];
       const rmaxCli = Math.max.apply(null, pontosCli.map(p => p.valor).concat([1]));
       clientesPts = pontosCli.map(p => {
@@ -3136,16 +3174,15 @@ class Component extends DCLogic {
         });
       }
       if (mostrarClientes && clientesPts.length) {
-        // destaque de cliente Let's por cima de qualquer visualização — em calor/
-        // concentração o fundo já é laranja/vermelho, então o destaque vai em cinza
-        // pra não se perder; na dispersão (fundo azul/branco) laranja já contrasta bem
-        ctx.fillStyle = disp ? 'rgba(241,90,34,.95)' : 'rgba(120,124,131,.95)';
-        ctx.strokeStyle = '#000';
-        const sw2 = 1 / T.k;
+        // destaque de cliente Let's — pino (não círculo), pra ficar visível sem
+        // competir com os pontos coloridos do mercado por baixo. Cor única sempre
+        // (preto), não importa a visualização — é "a Let's está aqui", identidade
+        // fixa. Encolhe com o zoom igual aos outros pontos, mas a PONTA do pino
+        // nunca sai do lugar real (só a cabeça acima dela cresce/diminui).
+        const swPino = 1 / T.k;
         clientesPts.forEach(p => {
-          const r = p.r / Math.pow(T.k, .72);
-          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2831853); ctx.fill();
-          ctx.lineWidth = sw2; ctx.stroke();
+          const r = Math.max(2, p.r / Math.pow(T.k, .72));
+          this._desenharPino(ctx, p.x, p.y, r, '#1a1a1a', swPino);
         });
       }
       if (cnpjXY) {
@@ -3271,8 +3308,8 @@ class Component extends DCLogic {
       if (downAt && Math.hypot(ev.clientX - downAt.x, ev.clientY - downAt.y) > 4) return;
       const mx = (ev.offsetX - T.x) / T.k, my = (ev.offsetY - T.y) / T.k;
 
-      // 1) bolinha de destaque (cliente Let's) tem prioridade — é a mais específica.
-      // Abre só os clientes daquele local.
+      // 1) pino de destaque (cliente Let's) tem prioridade — é o mais específico.
+      // Abre só os clientes daquele local (no setor certo, se veio de "comparar setores").
       if (mostrarClientes && clientesPts.length) {
         let best = null, bd = Infinity;
         for (let i = 0; i < clientesPts.length; i++) {
@@ -3280,7 +3317,7 @@ class Component extends DCLogic {
           const d2 = (mx - p.x) * (mx - p.x) + (my - p.y) * (my - p.y);
           if (d2 < bd && d2 < (p.r + 6) * (p.r + 6)) { bd = d2; best = p; }
         }
-        if (best && best.ibge) { this.abrirPontoMapa(best.ibge, best.nome || 'Município', true); return; }
+        if (best && best.ibge) { this.abrirPontoMapa(best.ibge, best.nome || 'Município', true, best.setor); return; }
       }
       // 2) ponto de dispersão (município real) — abre todo o recorte, com o selo de
       // cliente marcado em cada linha
