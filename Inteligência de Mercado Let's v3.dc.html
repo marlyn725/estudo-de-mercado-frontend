@@ -1069,10 +1069,10 @@ a:hover { opacity: .75; }
                     </sc-if>
 
                     <sc-if value="{{ mRaioComCentro }}" hint-placeholder-val="{{ false }}">
-                      <div style="{{ glassBarStyle }}">
-                        <span style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #2F323B; font-weight: 700; white-space: nowrap;">📍 Raio</span>
+                      <div style="{{ raioBarraStyle }}" style-hover="{{ raioBarraHoverStyle }}">
+                        <span style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #2F323B; font-weight: 700; white-space: nowrap; flex: 0 0 auto;">📍 Raio</span>
+                        <span style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13.5px; font-weight: 700; color: #1a73e8; white-space: nowrap; flex: 0 0 auto;">{{ mRaioKmLabel }}</span>
                         <input type="range" min="5" max="300" step="5" value="{{ mRaioKm }}" onChange="{{ onMudarRaioKm }}" style="flex: 1; min-width: 140px; max-width: 320px;">
-                        <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13.5px; font-weight: 700; color: #000; white-space: nowrap; width: 56px;">{{ mRaioKmLabel }}</div>
                         <div style="font-size: 11.5px; color: #2F323B; white-space: nowrap;">{{ mRaioMunicipiosLabel }}</div>
                         <div onClick="{{ onAplicarRaio }}" style="{{ aplicarRaioBtnStyle }}">{{ aplicarRaioBtnLabel }}</div>
                         <div onClick="{{ onRemoverRaio }}" style="font-size: 11.5px; color: #2F323B; text-decoration: underline; cursor: pointer; white-space: nowrap;">remover</div>
@@ -1651,6 +1651,10 @@ class Component extends DCLogic {
       mRaioCentro: null,
       mRaioKm: 50,
       mRaioCarregando: false,
+      // recolhe a barra do raio quando o usuário clica no mapa pra explorar o
+      // resultado (fica só um indicador opaco no canto, sem tampar o mapa) —
+      // expande de novo só com CSS (:hover), sem precisar de estado extra
+      mRaioBarraRecolhida: false,
       mSetorSelecionado: null,
       mSetorSelecionadoNome: '',
       mSetoresComparar: [],
@@ -2626,7 +2630,7 @@ class Component extends DCLogic {
   // existe (Setor, Porte, Situação, Matriz/Filial, Regional).
   definirCentroRaio(lat, lon) {
     this.setState({
-      mRaioSelecionando: false, mRaioCentro: { lat, lon },
+      mRaioSelecionando: false, mRaioCentro: { lat, lon }, mRaioBarraRecolhida: false,
       mUfs: [], mRegioes: [], mMunicipioQuery: ''
     }, () => this.redesenharRaioLeve());
     this.atualizarCursorMapa(false);
@@ -2667,7 +2671,7 @@ class Component extends DCLogic {
   aplicarRaio() {
     const st = this.state;
     if (!st.mRaioCentro || st.mCarregando || st.mComparandoSetores) return;
-    this.setState({ mFiltrosRecolhidos: true });
+    this.setState({ mFiltrosRecolhidos: true, mRaioBarraRecolhida: false });
     // avisa o próximo paintMap() completo (disparado pela busca abaixo) pra
     // aproximar o mapa na área do raio, em vez de manter o zoom/escopo anterior
     this._zoomParaRaioPendente = true;
@@ -3536,6 +3540,14 @@ class Component extends DCLogic {
         return;
       }
 
+      // 0b) qualquer outro clique no mapa (explorando o resultado) recolhe a
+      // barra do raio pra não tampar a visualização — ela some com uma animação
+      // e vira só um indicador opaco no canto; passar o mouse por cima expande
+      // de novo (ver glassBarStyle/raioBarraStyle, tratado só via CSS :hover).
+      if (this.state.mRaioCentro && !this.state.mRaioBarraRecolhida) {
+        this.setState({ mRaioBarraRecolhida: true });
+      }
+
       // 1) pino de destaque (cliente Let's) tem prioridade — é o mais específico.
       // Abre só os clientes daquele local (no setor certo, se veio de "comparar setores").
       if (mostrarClientes && clientesPts.length) {
@@ -4179,6 +4191,17 @@ class Component extends DCLogic {
         'background: rgba(255,255,255,.72); backdrop-filter: blur(12px) saturate(1.6); -webkit-backdrop-filter: blur(12px) saturate(1.6); ' +
         'border: 1px solid rgba(255,255,255,.5); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; ' +
         'flex-wrap: wrap; font-size: 12px; color: #2F323B; box-shadow: 0 4px 14px rgba(17,15,12,.14);',
+      // barra do raio JÁ aplicado: igual à glassBarStyle, mas com largura animável
+      // (overflow escondido) — recolhida vira só um selo opaco "📍 Raio · 50 km" no
+      // canto; passar o mouse expande de novo (style-hover), sem precisar de JS
+      // pro hover (o :hover reverte sozinho quando o mouse sai, por ser CSS puro)
+      raioBarraStyle: 'position: absolute; top: 12px; left: 12px; z-index: 6; ' +
+        'background: rgba(255,255,255,.72); backdrop-filter: blur(12px) saturate(1.6); -webkit-backdrop-filter: blur(12px) saturate(1.6); ' +
+        'border: 1px solid rgba(255,255,255,.5); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; ' +
+        'font-size: 12px; color: #2F323B; box-shadow: 0 4px 14px rgba(17,15,12,.14); overflow: hidden; white-space: nowrap; ' +
+        'transition: width .32s cubic-bezier(.4,0,.2,1), background .2s ease; ' +
+        (st.mRaioBarraRecolhida ? 'width: 148px; cursor: pointer; background: rgba(255,255,255,.85);' : 'width: calc(100% - 72px);'),
+      raioBarraHoverStyle: 'width: calc(100% - 72px); cursor: default;',
       onMudarRaioKm: (e) => this.agendarAtualizarRaio(parseInt(e.target.value, 10)),
       mRaioKm: st.mRaioKm,
       mRaioKmLabel: st.mRaioKm + ' km',
