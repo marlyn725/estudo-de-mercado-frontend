@@ -807,29 +807,7 @@ a:hover { opacity: .75; }
                 </div>
               </sc-for>
               <div style="font-size: 12px; color: #2F323B; font-weight: 600; white-space: nowrap; margin-left: 4px;">{{ escopoScopeLabel }}</div>
-              <div style="flex: 1;"></div>
-              <sc-if value="{{ mRaioSemCentro }}" hint-placeholder-val="{{ false }}">
-                <div onClick="{{ onIniciarRaio }}" style="{{ raioBtnStyle }}">📍 {{ raioBtnLabel }}</div>
-              </sc-if>
             </div>
-
-            <sc-if value="{{ mRaioSelecionando }}" hint-placeholder-val="{{ false }}">
-              <div style="background: #fff6f2; border: 1px solid #F15A22; border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #2F323B;">
-                <span style="font-weight: 700; color: #F15A22;">📍</span>
-                <span style="flex: 1;">Clique em qualquer ponto do mapa abaixo para marcar o centro do raio.</span>
-                <div onClick="{{ onCancelarRaio }}" style="font-size: 12px; color: #A09BA2; text-decoration: underline; cursor: pointer;">cancelar</div>
-              </div>
-            </sc-if>
-
-            <sc-if value="{{ mRaioComCentro }}" hint-placeholder-val="{{ false }}">
-              <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 12px 18px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-                <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700; white-space: nowrap;">Raio de abrangência</div>
-                <input type="range" min="5" max="300" step="5" value="{{ mRaioKm }}" onChange="{{ onMudarRaioKm }}" style="flex: 1; min-width: 160px; max-width: 320px;">
-                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14px; font-weight: 700; color: #000; white-space: nowrap; width: 64px;">{{ mRaioKmLabel }}</div>
-                <div style="font-size: 12px; color: #6c6c6c; white-space: nowrap;">{{ mRaioMunicipiosLabel }}</div>
-                <div onClick="{{ onRemoverRaio }}" style="font-size: 12px; color: #F15A22; text-decoration: underline; cursor: pointer; white-space: nowrap;">remover raio</div>
-              </div>
-            </sc-if>
 
             <!-- barra recolhida: some assim que "Carregar mapa" é clicado, deixando o mapa
                  com mais espaço; clicar nela (ou no botão "editar filtros") reabre o painel
@@ -1068,7 +1046,33 @@ a:hover { opacity: .75; }
                     <div style="flex: 1;"></div>
                     <div style="font-size: 11.5px; color: #2F323B; font-weight: 600;">{{ mapTotalLabel }}</div>
                   </div>
-                  <div ref="{{ mapRef }}" style="width: 100%; height: 566px; background: #F5F5F5; border-radius: 6px; position: relative; overflow: hidden;"></div>
+                  <div style="position: relative;">
+                    <div ref="{{ mapRef }}" style="width: 100%; height: 566px; background: #F5F5F5; border-radius: 6px; position: relative; overflow: hidden;"></div>
+
+                    <sc-if value="{{ mRaioSemCentro }}" hint-placeholder-val="{{ false }}">
+                      <div style="position: absolute; top: 12px; left: 12px; z-index: 6;">
+                        <div onClick="{{ onIniciarRaio }}" style="{{ raioBtnStyle }}">📍 {{ raioBtnLabel }}</div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ mRaioSelecionando }}" hint-placeholder-val="{{ false }}">
+                      <div style="position: absolute; top: 12px; left: 12px; right: 50px; z-index: 6; background: #fff6f2; border: 1px solid #F15A22; border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; font-size: 12px; color: #2F323B; box-shadow: 0 4px 14px rgba(17,15,12,.12);">
+                        <span style="font-weight: 700; color: #F15A22;">📍</span>
+                        <span style="flex: 1;">Clique num ponto do mapa para marcar o centro do raio.</span>
+                        <div onClick="{{ onCancelarRaio }}" style="font-size: 11.5px; color: #A09BA2; text-decoration: underline; cursor: pointer; white-space: nowrap;">cancelar</div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ mRaioComCentro }}" hint-placeholder-val="{{ false }}">
+                      <div style="position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 6; background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 14px rgba(17,15,12,.12);">
+                        <span style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700; white-space: nowrap;">📍 Raio</span>
+                        <input type="range" min="5" max="300" step="5" value="{{ mRaioKm }}" onChange="{{ onMudarRaioKm }}" style="flex: 1; min-width: 140px; max-width: 320px;">
+                        <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13.5px; font-weight: 700; color: #000; white-space: nowrap; width: 56px;">{{ mRaioKmLabel }}</div>
+                        <div style="font-size: 11.5px; color: #6c6c6c; white-space: nowrap;">{{ mRaioMunicipiosLabel }}</div>
+                        <div onClick="{{ onRemoverRaio }}" style="font-size: 11.5px; color: #F15A22; text-decoration: underline; cursor: pointer; white-space: nowrap;">remover</div>
+                      </div>
+                    </sc-if>
+                  </div>
                   <sc-if value="{{ isMultiSetor }}" hint-placeholder-val="{{ false }}">
                     <div style="display: flex; align-items: center; gap: 16px; padding: 2px 2px 6px; flex-wrap: wrap;">
                       <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Setores</div>
@@ -2599,10 +2603,22 @@ class Component extends DCLogic {
     this.atualizarRaioKm(this.state.mRaioKm || 50, { lat, lon });
   }
 
+  // arrastar o slider dispara onChange várias vezes por segundo — cada mudança de
+  // mRaioKm força o mapa inteiro a redesenhar (repintar todos os pontos/labels do
+  // recorte atual, não só o círculo), o que é caro se o recorte tiver muitos
+  // pontos. requestAnimationFrame junta várias mudanças rápidas num redesenho só
+  // por quadro (no máx. ~60/s, geralmente bem menos), em vez de um redesenho
+  // completo por evento — sem isso, arrastar o slider parecia travado.
   agendarAtualizarRaio(km) {
-    this.setState({ mRaioKm: km });
+    this._raioKmPendente = km;
+    if (!this._raioRaf) {
+      this._raioRaf = requestAnimationFrame(() => {
+        this._raioRaf = null;
+        this.setState({ mRaioKm: this._raioKmPendente });
+      });
+    }
     clearTimeout(this._raioT);
-    this._raioT = setTimeout(() => this.atualizarRaioKm(km), 350);
+    this._raioT = setTimeout(() => this.atualizarRaioKm(this._raioKmPendente), 350);
   }
 
   atualizarRaioKm(km, centroOverride) {
