@@ -1070,7 +1070,7 @@ a:hover { opacity: .75; }
                     </sc-if>
 
                     <sc-if value="{{ mRaioBarraExpandida }}" hint-placeholder-val="{{ false }}">
-                      <div onMouseEnter="{{ onRaioBarraMouseEnter }}" onMouseLeave="{{ onRaioBarraMouseLeave }}" style="{{ glassBarStyle }} animation: raioPop .18s ease-out;">
+                      <div onMouseLeave="{{ onRaioBarraMouseLeave }}" style="{{ glassBarStyle }} animation: raioPop .18s ease-out;">
                         <span style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #2F323B; font-weight: 700; white-space: nowrap;">📍 Raio</span>
                         <input type="range" min="5" max="300" step="5" value="{{ mRaioKm }}" onChange="{{ onMudarRaioKm }}" style="flex: 1; min-width: 140px; max-width: 320px;">
                         <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13.5px; font-weight: 700; color: #000; white-space: nowrap; width: 56px;">{{ mRaioKmLabel }}</div>
@@ -2619,28 +2619,17 @@ class Component extends DCLogic {
     this.atualizarCursorMapa(false);
   }
 
-  // a barra cheia do raio recolhe sozinha ~3.5s depois do mouse sair dela — não
-  // mais ao clicar no mapa (isso arriscava um clique acidental tanto recolher
-  // quanto, no mesmo clique, abrir um ponto/estado por baixo). onMouseEnter da
-  // própria barra cancela o timer; onMouseLeave reinicia; e ela já nasce com o
-  // timer ligado (chamado no fim de definirCentroRaio/aplicarRaio/expandir).
-  iniciarTimerColapsoRaio() {
-    clearTimeout(this._raioColapsoT);
-    this._raioColapsoT = setTimeout(() => {
-      if (this.state.mRaioCentro) this.setState({ mRaioBarraRecolhida: true });
-    }, 3500);
-  }
-
-  cancelarTimerColapsoRaio() {
-    clearTimeout(this._raioColapsoT);
+  // a barra cheia do raio recolhe assim que o mouse sai dela (onMouseLeave) —
+  // não mais ao clicar no mapa (isso arriscava um clique acidental tanto
+  // recolher quanto, no mesmo clique, abrir um ponto/estado por baixo) nem por
+  // um timer (mais direto e previsível: sai o mouse, recolhe na hora).
+  colapsarRaioBarra() {
+    this.setState({ mRaioBarraRecolhida: true });
   }
 
   // selo recolhido -> barra cheia, disparado por hover (ou clique, de brinde,
-  // pra touch) sobre o selo. Não reinicia o timer de colapso na hora — o mouse
-  // já está em cima do selo/barra nesse momento, reiniciar aqui deixaria a barra
-  // recolhendo de novo sozinha embaixo do próprio cursor.
+  // pra touch) sobre o selo.
   expandirRaioBarra() {
-    this.cancelarTimerColapsoRaio();
     this.setState({ mRaioBarraRecolhida: false });
   }
 
@@ -2665,7 +2654,6 @@ class Component extends DCLogic {
     }, () => this.redesenharRaioLeve());
     this.atualizarCursorMapa(false);
     this.atualizarRaioKm(this.state.mRaioKm || 50, { lat, lon });
-    this.iniciarTimerColapsoRaio();
   }
 
   // arrastar o PINO (não o slider) pra reposicionar o raio sem cancelar e
@@ -2687,7 +2675,6 @@ class Component extends DCLogic {
   // de verdade continua exigindo clicar "Aplicar raio", igual já era antes.
   finalizarArrastoPinoRaio() {
     this.atualizarRaioKm(this.state.mRaioKm, this.state.mRaioCentro);
-    this.iniciarTimerColapsoRaio();
   }
 
   // arrastar o slider dispara onChange várias vezes por segundo — junta essas
@@ -2728,13 +2715,11 @@ class Component extends DCLogic {
     // avisa o próximo paintMap() completo (disparado pela busca abaixo) pra
     // aproximar o mapa na área do raio, em vez de manter o zoom/escopo anterior
     this._zoomParaRaioPendente = true;
-    this.iniciarTimerColapsoRaio();
     if (this.setoresComparacaoAtivos().length >= 2) this.compararSetoresNoMapa();
     else this.carregarEstudoMercado();
   }
 
   removerRaio() {
-    this.cancelarTimerColapsoRaio();
     this.setState({ mRaioCentro: null, mMunicipios: [] }, () => this.redesenharRaioLeve());
   }
 
@@ -2748,7 +2733,6 @@ class Component extends DCLogic {
   abrirEstudoRegionalDoEstado(uf) {
     const st = this.state;
     const anterior = { mEscopo: st.mEscopo, mUfs: st.mUfs, mRegioes: st.mRegioes };
-    this.cancelarTimerColapsoRaio();
     this.setState({
       mEscopo: 'regional', mUfs: [uf],
       mRegioes: Object.keys(REGIOES).filter(r => REGIOES[r].indexOf(uf) >= 0),
@@ -4309,8 +4293,7 @@ class Component extends DCLogic {
       mRaioBarraExpandida: !!st.mRaioCentro && !st.mRaioBarraRecolhida,
       mRaioBarraRecolhidaAtiva: !!st.mRaioCentro && !!st.mRaioBarraRecolhida,
       onExpandirRaioBarra: () => this.expandirRaioBarra(),
-      onRaioBarraMouseEnter: () => this.cancelarTimerColapsoRaio(),
-      onRaioBarraMouseLeave: () => this.iniciarTimerColapsoRaio(),
+      onRaioBarraMouseLeave: () => this.colapsarRaioBarra(),
       raioPillStyle: 'position: absolute; top: 12px; left: 12px; z-index: 6; cursor: pointer; ' +
         'background: rgba(255,255,255,.78); backdrop-filter: blur(12px) saturate(1.6); -webkit-backdrop-filter: blur(12px) saturate(1.6); ' +
         'border: 1px solid rgba(255,255,255,.5); border-radius: 999px; padding: 9px 16px; white-space: nowrap; ' +
