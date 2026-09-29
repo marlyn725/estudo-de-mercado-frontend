@@ -3431,8 +3431,7 @@ class Component extends DCLogic {
         // nunca sai do lugar real (só a cabeça acima dela cresce/diminui).
         const swPino = 1 / T.k;
         clientesPts.forEach(p => {
-          const r = Math.max(2, p.r / Math.pow(T.k, .72));
-          this._desenharPino(ctx, p.x, p.y, r, IMG_PINO_CLIENTE, '#D93025', swPino);
+          this._desenharPino(ctx, p.x, p.y, raioPinoCliente(p), IMG_PINO_CLIENTE, '#D93025', swPino);
         });
       }
       // lê this.state (não o `st` capturado no topo de paintMap) de propósito: esse
@@ -3473,7 +3472,7 @@ class Component extends DCLogic {
           ctx.stroke();
         }
         const centroXY = proj([raioCentroAtual.lon, raioCentroAtual.lat]);
-        if (centroXY) this._desenharPino(ctx, centroXY[0], centroXY[1], 7 / Math.pow(T.k, .5), IMG_PINO_RAIO, '#1a73e8', 1.2 / T.k);
+        if (centroXY) this._desenharPino(ctx, centroXY[0], centroXY[1], RAIO_PINO_R / Math.pow(T.k, .5), IMG_PINO_RAIO, '#1a73e8', 1.2 / T.k);
       }
       if (cnpjXY) {
         const r = 9 / Math.pow(T.k, .5);
@@ -3529,12 +3528,28 @@ class Component extends DCLogic {
 
     let raf = 0;
     const schedule = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; draw(); }); };
-    // acerta um clique/toque em QUALQUER parte visível do pino do raio — a cabeça
-    // (círculo grande) OU o cone abaixo dela, não só bem na pontinha exata (que era
-    // o bug: o alvo de arrastar só cobria a ponta do cone, ignorando o círculo
-    // enorme e óbvio desenhado por cima). Mesma geometria de _desenharPino: cabeça
-    // centrada em r*1.7 acima da ponta, raio r — um círculo só, centrado a meio
-    // caminho entre a ponta e o topo da cabeça, com folga, cobre a forma inteira.
+    // raio-base (em px de mundo, no zoom mínimo) do pino do centro do raio — usado
+    // tanto pra desenhar (_desenharPino) quanto pro alvo de arrastar (raioPinoHit),
+    // os dois têm que concordar sempre no mesmo valor.
+    const RAIO_PINO_R = 11;
+    // idem pro pino de cliente Let's: piso mais alto (6, era 2) e um fator 1.35x —
+    // com o PNG (tem a marca Let's dentro), um pino pequeno demais fica ilegível,
+    // principalmente no mapa bem afastado (zoom mínimo). Compartilhado entre o
+    // desenho (dentro de draw()) e o alvo de clique (no listener 'click' mais
+    // abaixo) — os dois têm que concordar no mesmo tamanho, senão o clique erra
+    // do que está desenhado na tela (foi exatamente esse o bug: o alvo de clique
+    // usava um raio fixo em volta da ponta, sem bater com o tamanho real do pino).
+    const raioPinoCliente = (p) => Math.max(6, (p.r / Math.pow(T.k, .72)) * 1.35);
+    // acerta um clique/toque em QUALQUER parte visível de um pino (a cabeça/imagem
+    // grande OU o cone abaixo dela) — não só bem na pontinha exata (a coordenada
+    // geográfica real). Usada tanto pro pino do raio (arrastar) quanto pro pino de
+    // cliente Let's (abrir a lista de empresas): um círculo só, centrado um pouco
+    // acima da ponta, com raio generoso, cobre a forma inteira do pino nessa escala.
+    const pinoAlvo = (mx, my, px, py, r) => {
+      const alvoY = py - r * 1.1;
+      const raioAlvo = r * 1.9 + 6 / T.k;
+      return (mx - px) * (mx - px) + (my - alvoY) * (my - alvoY) <= raioAlvo * raioAlvo;
+    };
     // Lê this.state ao vivo (não `st`), porque o pino pode ter sido movido desde o
     // último paintMap() completo (arrastar só redesenha leve, ver redesenharRaioLeve).
     const raioPinoHit = (mx, my) => {
@@ -3542,10 +3557,7 @@ class Component extends DCLogic {
       if (!centro) return false;
       const ponta = proj([centro.lon, centro.lat]);
       if (!ponta) return false;
-      const r = 7 / Math.pow(T.k, 0.5);
-      const alvoY = ponta[1] - r;
-      const raioAlvo = r * 1.8 + 6 / T.k;
-      return (mx - ponta[0]) * (mx - ponta[0]) + (my - alvoY) * (my - alvoY) <= raioAlvo * raioAlvo;
+      return pinoAlvo(mx, my, ponta[0], ponta[1], RAIO_PINO_R / Math.pow(T.k, 0.5));
     };
     const zoom = d3.zoom().scaleExtent([1, 60]).translateExtent([[0, 0], [w, h]])
       .filter((ev) => {
@@ -3683,7 +3695,7 @@ class Component extends DCLogic {
         for (let i = 0; i < clientesPts.length; i++) {
           const p = clientesPts[i];
           const d2 = (mx - p.x) * (mx - p.x) + (my - p.y) * (my - p.y);
-          if (d2 < bd && d2 < (p.r + 6) * (p.r + 6)) { bd = d2; best = p; }
+          if (d2 < bd && pinoAlvo(mx, my, p.x, p.y, raioPinoCliente(p))) { bd = d2; best = p; }
         }
         if (best && best.ibge) { this.abrirPontoMapa(best.ibge, best.nome || 'Município', true, best.setor); return; }
       }
