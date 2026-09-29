@@ -3611,6 +3611,12 @@ class Component extends DCLogic {
         if (raioPinoHit(mx0, my0)) {
           const rect = canvas.getBoundingClientRect();
           canvas.style.cursor = 'grabbing';
+          // se a barra estava recolhida (o mouse nunca chegou a passar por cima
+          // dela pra arrastar direto o pino), expande de volta — sem isso o
+          // usuário arrasta o pino pro lugar certo e não acha o botão "Aplicar
+          // raio" em lugar nenhum. Volta a recolher sozinha no próximo
+          // onMouseLeave da barra, dinâmica normal, a partir daqui em diante.
+          if (this.state.mRaioBarraRecolhida) this.expandirRaioBarra();
           let moveu = false;
           const aoMover = (mv) => {
             moveu = true;
