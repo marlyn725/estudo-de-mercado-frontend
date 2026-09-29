@@ -1061,21 +1061,21 @@ a:hover { opacity: .75; }
                     </sc-if>
 
                     <sc-if value="{{ mRaioSelecionando }}" hint-placeholder-val="{{ false }}">
-                      <div style="position: absolute; top: 12px; left: 12px; right: 50px; z-index: 6; background: #fff6f2; border: 1px solid #F15A22; border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; font-size: 12px; color: #2F323B; box-shadow: 0 4px 14px rgba(17,15,12,.12);">
-                        <span style="font-weight: 700; color: #F15A22;">📍</span>
+                      <div style="{{ glassBarStyle }}">
+                        <span style="font-weight: 700; color: #1a73e8;">📍</span>
                         <span style="flex: 1;">Clique num ponto do mapa para marcar o centro do raio.</span>
-                        <div onClick="{{ onCancelarRaio }}" style="font-size: 11.5px; color: #A09BA2; text-decoration: underline; cursor: pointer; white-space: nowrap;">cancelar</div>
+                        <div onClick="{{ onCancelarRaio }}" style="font-size: 11.5px; color: #2F323B; text-decoration: underline; cursor: pointer; white-space: nowrap;">cancelar</div>
                       </div>
                     </sc-if>
 
                     <sc-if value="{{ mRaioComCentro }}" hint-placeholder-val="{{ false }}">
-                      <div style="position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 6; background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 14px rgba(17,15,12,.12);">
-                        <span style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700; white-space: nowrap;">📍 Raio</span>
+                      <div style="{{ glassBarStyle }}">
+                        <span style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #2F323B; font-weight: 700; white-space: nowrap;">📍 Raio</span>
                         <input type="range" min="5" max="300" step="5" value="{{ mRaioKm }}" onChange="{{ onMudarRaioKm }}" style="flex: 1; min-width: 140px; max-width: 320px;">
                         <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13.5px; font-weight: 700; color: #000; white-space: nowrap; width: 56px;">{{ mRaioKmLabel }}</div>
-                        <div style="font-size: 11.5px; color: #6c6c6c; white-space: nowrap;">{{ mRaioMunicipiosLabel }}</div>
+                        <div style="font-size: 11.5px; color: #2F323B; white-space: nowrap;">{{ mRaioMunicipiosLabel }}</div>
                         <div onClick="{{ onAplicarRaio }}" style="{{ aplicarRaioBtnStyle }}">{{ aplicarRaioBtnLabel }}</div>
-                        <div onClick="{{ onRemoverRaio }}" style="font-size: 11.5px; color: #A09BA2; text-decoration: underline; cursor: pointer; white-space: nowrap;">remover</div>
+                        <div onClick="{{ onRemoverRaio }}" style="font-size: 11.5px; color: #2F323B; text-decoration: underline; cursor: pointer; white-space: nowrap;">remover</div>
                       </div>
                     </sc-if>
                   </div>
@@ -2668,6 +2668,9 @@ class Component extends DCLogic {
     const st = this.state;
     if (!st.mRaioCentro || st.mCarregando || st.mComparandoSetores) return;
     this.setState({ mFiltrosRecolhidos: true });
+    // avisa o próximo paintMap() completo (disparado pela busca abaixo) pra
+    // aproximar o mapa na área do raio, em vez de manter o zoom/escopo anterior
+    this._zoomParaRaioPendente = true;
     if (this.setoresComparacaoAtivos().length >= 2) this.compararSetoresNoMapa();
     else this.carregarEstudoMercado();
   }
@@ -3265,6 +3268,25 @@ class Component extends DCLogic {
 
     const cnpjXY = (st.cnpjLocalizado && st.cnpjLocalizado.lat != null) ? proj([st.cnpjLocalizado.lon, st.cnpjLocalizado.lat]) : null;
 
+    // ao clicar "Aplicar raio" (ver aplicarRaio), aproxima o mapa pra caber
+    // exatamente a área do raio — calcula os 4 pontos cardeais reais a {{km}} do
+    // centro (mesma fórmula do círculo) e projeta, em vez de tentar adivinhar um
+    // zoom fixo, que ficaria errado pra raios pequenos ou muito grandes
+    if (this._zoomParaRaioPendente && st.mRaioCentro) {
+      this._zoomParaRaioPendente = false;
+      const centro = st.mRaioCentro, km = st.mRaioKm;
+      const cardeais = [0, 90, 180, 270].map(b => proj(pontoDestinoGeo(centro.lat, centro.lon, b, km)));
+      if (cardeais.every(Boolean)) {
+        const xs = cardeais.map(p => p[0]), ys = cardeais.map(p => p[1]);
+        const x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+        const y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+        const pad = 48;
+        const bw = Math.max(1, x1 - x0), bh = Math.max(1, y1 - y0);
+        const k = Math.max(1, Math.min(60, Math.min((w - pad * 2) / bw, (h - pad * 2) / bh)));
+        const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+        this._mapT = d3.zoomIdentity.translate(w / 2 - cx * k, h / 2 - cy * k).scale(k);
+      }
+    }
     // preserva o zoom/pan entre repaints — sem isso, toda vez que os dados de
     // município de um novo estado terminam de carregar (_munBTick muda, força um
     // paintMap novo), o mapa voltava pro zoom padrão no meio do gesto do usuário
@@ -3360,14 +3382,21 @@ class Component extends DCLogic {
           ctx.moveTo(anelPts[0][0], anelPts[0][1]);
           anelPts.slice(1).forEach(p => ctx.lineTo(p[0], p[1]));
           ctx.closePath();
-          ctx.fillStyle = 'rgba(241,90,34,.08)';
+          ctx.fillStyle = 'rgba(255,255,255,.10)';
           ctx.fill();
-          ctx.strokeStyle = 'rgba(241,90,34,.85)';
-          ctx.lineWidth = 1.6 / T.k;
+          // halo branco grosso por baixo + contorno azul saturado por cima — dá
+          // contraste em qualquer fundo (laranja/vermelho do calor, área clara,
+          // área escura), diferente do laranja de antes, que sumia nas áreas
+          // quentes do próprio mapa de calor
+          ctx.strokeStyle = 'rgba(255,255,255,.95)';
+          ctx.lineWidth = 4.2 / T.k;
+          ctx.stroke();
+          ctx.strokeStyle = '#1a73e8';
+          ctx.lineWidth = 1.8 / T.k;
           ctx.stroke();
         }
         const centroXY = proj([raioCentroAtual.lon, raioCentroAtual.lat]);
-        if (centroXY) this._desenharPino(ctx, centroXY[0], centroXY[1], 7 / Math.pow(T.k, .5), ORANGE, 1.2 / T.k);
+        if (centroXY) this._desenharPino(ctx, centroXY[0], centroXY[1], 7 / Math.pow(T.k, .5), '#1a73e8', 1.2 / T.k);
       }
       if (cnpjXY) {
         const r = 9 / Math.pow(T.k, .5);
@@ -4142,7 +4171,14 @@ class Component extends DCLogic {
       // vermelho, área clara etc.); com blur, sempre tem contraste com o fundo
       raioBtnStyle: 'padding: 8px 14px; border-radius: 999px; font-size: 12px; cursor: pointer; white-space: nowrap; ' +
         'backdrop-filter: blur(10px) saturate(1.6); -webkit-backdrop-filter: blur(10px) saturate(1.6); box-shadow: 0 2px 10px rgba(17,15,12,.14); ' +
-        (st.mRaioSelecionando ? 'background: rgba(241,90,34,.85); color: #fff; font-weight: 600; border: 1px solid rgba(241,90,34,.9);' : 'background: rgba(255,255,255,.62); color: #2F323B; border: 1px solid rgba(255,255,255,.5);'),
+        (st.mRaioSelecionando ? 'background: rgba(26,115,232,.88); color: #fff; font-weight: 600; border: 1px solid rgba(26,115,232,.9);' : 'background: rgba(255,255,255,.62); color: #2F323B; border: 1px solid rgba(255,255,255,.5);'),
+      // barra "vidro fosco" no topo do mapa (instrução de clique / slider do raio) —
+      // fica no mesmo canto que o botão inicial, deixando espaço à direita (60px)
+      // pros botões de zoom (+/−/reset) que o próprio mapa desenha ali
+      glassBarStyle: 'position: absolute; top: 12px; left: 12px; right: 60px; z-index: 6; ' +
+        'background: rgba(255,255,255,.72); backdrop-filter: blur(12px) saturate(1.6); -webkit-backdrop-filter: blur(12px) saturate(1.6); ' +
+        'border: 1px solid rgba(255,255,255,.5); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; ' +
+        'flex-wrap: wrap; font-size: 12px; color: #2F323B; box-shadow: 0 4px 14px rgba(17,15,12,.14);',
       onMudarRaioKm: (e) => this.agendarAtualizarRaio(parseInt(e.target.value, 10)),
       mRaioKm: st.mRaioKm,
       mRaioKmLabel: st.mRaioKm + ' km',
