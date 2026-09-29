@@ -807,7 +807,29 @@ a:hover { opacity: .75; }
                 </div>
               </sc-for>
               <div style="font-size: 12px; color: #2F323B; font-weight: 600; white-space: nowrap; margin-left: 4px;">{{ escopoScopeLabel }}</div>
+              <div style="flex: 1;"></div>
+              <sc-if value="{{ mRaioSemCentro }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ onIniciarRaio }}" style="{{ raioBtnStyle }}">📍 {{ raioBtnLabel }}</div>
+              </sc-if>
             </div>
+
+            <sc-if value="{{ mRaioSelecionando }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #fff6f2; border: 1px solid #F15A22; border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #2F323B;">
+                <span style="font-weight: 700; color: #F15A22;">📍</span>
+                <span style="flex: 1;">Clique em qualquer ponto do mapa abaixo para marcar o centro do raio.</span>
+                <div onClick="{{ onCancelarRaio }}" style="font-size: 12px; color: #A09BA2; text-decoration: underline; cursor: pointer;">cancelar</div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ mRaioComCentro }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 12px 18px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700; white-space: nowrap;">Raio de abrangência</div>
+                <input type="range" min="5" max="300" step="5" value="{{ mRaioKm }}" onChange="{{ onMudarRaioKm }}" style="flex: 1; min-width: 160px; max-width: 320px;">
+                <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 14px; font-weight: 700; color: #000; white-space: nowrap; width: 64px;">{{ mRaioKmLabel }}</div>
+                <div style="font-size: 12px; color: #6c6c6c; white-space: nowrap;">{{ mRaioMunicipiosLabel }}</div>
+                <div onClick="{{ onRemoverRaio }}" style="font-size: 12px; color: #F15A22; text-decoration: underline; cursor: pointer; white-space: nowrap;">remover raio</div>
+              </div>
+            </sc-if>
 
             <!-- barra recolhida: some assim que "Carregar mapa" é clicado, deixando o mapa
                  com mais espaço; clicar nela (ou no botão "editar filtros") reabre o painel
@@ -1475,6 +1497,22 @@ function apiDelete(path) {
   return fetch(API_BASE + path, { method: 'DELETE' })
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
 }
+// ponto de destino esférico (fórmula padrão "destination point given start,
+// bearing, distance") — usado pra desenhar o círculo GEOGRÁFICO do raio de
+// abrangência no mapa (não um círculo em pixel, que ficaria elíptico longe do
+// equador nessa projeção). bearingDeg em graus, distKm em km, devolve [lon, lat]
+// (mesma ordem que d3 espera pra projetar).
+function pontoDestinoGeo(lat, lon, bearingDeg, distKm) {
+  const R = 6371;
+  const d = distKm / R, brng = bearingDeg * Math.PI / 180;
+  const phi1 = lat * Math.PI / 180, lambda1 = lon * Math.PI / 180;
+  const phi2 = Math.asin(Math.sin(phi1) * Math.cos(d) + Math.cos(phi1) * Math.sin(d) * Math.cos(brng));
+  const lambda2 = lambda1 + Math.atan2(
+    Math.sin(brng) * Math.sin(d) * Math.cos(phi1),
+    Math.cos(d) - Math.sin(phi1) * Math.sin(phi2)
+  );
+  return [lambda2 * 180 / Math.PI, phi2 * 180 / Math.PI];
+}
 function fmtInt(n) { return (n == null ? 0 : n).toLocaleString('pt-BR'); }
 function fmtPct(n) { return (n == null ? 0 : n).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; }
 function fmtDataBr(iso) {
@@ -1594,6 +1632,10 @@ class Component extends DCLogic {
       // CNAEs): seleção única — quando escolhido, o backend passa a considerar CNAE
       // principal OU secundário da empresa, deduplicado, via tabela-resumo própria
       // (rápido). Guarda o nome junto pra não precisar recalcular no chip.
+      mRaioSelecionando: false,
+      mRaioCentro: null,
+      mRaioKm: 50,
+      mRaioCarregando: false,
       mSetorSelecionado: null,
       mSetorSelecionadoNome: '',
       mSetoresComparar: [],
@@ -2302,7 +2344,10 @@ class Component extends DCLogic {
       faixas_capital: st.mCapital,
       regiao: null,
       estados: this.shownUfs(),
-      municipios: st.mEscopo === 'regional' ? st.mMunicipios : [],
+      // raio de abrangência também usa mMunicipios (a lista calculada pelo
+      // backend a partir do centro+km) — precisa entrar mesmo com mEscopo
+      // nacional, já que o raio não depende de ter um estado selecionado
+      municipios: (st.mEscopo === 'regional' || st.mRaioCentro) ? st.mMunicipios : [],
       situacoes: st.mSituacoes,
       matriz_filial: st.mMatrizFilial,
       regionais: st.mRegionais,
@@ -2530,6 +2575,49 @@ class Component extends DCLogic {
   // MESMO perfil/segmentação já escolhido (idêntico ao clique no ranking lateral).
   // A lista de empresas (abrirPontoMapa) continua existindo, só que agora só a
   // partir do mapa regional (clique num município/ponto), nunca do nacional direto.
+  /* ---------- raio de abrangência ---------- */
+  // liga o "modo mira": o próximo clique no mapa (em qualquer zoom, nacional ou
+  // regional) vira o centro do raio, em vez de abrir o ponto/estado clicado
+  iniciarSelecaoRaio() {
+    this.setState({ mRaioSelecionando: true, open: null });
+  }
+
+  cancelarSelecaoRaio() {
+    this.setState({ mRaioSelecionando: false });
+  }
+
+  // raio SUBSTITUI Município/Mesorregião/Região/Estado — são formas concorrentes
+  // de recortar geografia, misturar geraria filtro contraditório (ver decisão
+  // com o usuário). Reaproveita mMunicipios (o mesmo campo do filtro manual de
+  // Município) pra herdar de graça toda a lógica de filtro por município que já
+  // existe (Setor, Porte, Situação, Matriz/Filial, Regional).
+  definirCentroRaio(lat, lon) {
+    this.setState({
+      mRaioSelecionando: false, mRaioCentro: { lat, lon },
+      mUfs: [], mRegioes: [], mMunicipioQuery: ''
+    });
+    this.atualizarRaioKm(this.state.mRaioKm || 50, { lat, lon });
+  }
+
+  agendarAtualizarRaio(km) {
+    this.setState({ mRaioKm: km });
+    clearTimeout(this._raioT);
+    this._raioT = setTimeout(() => this.atualizarRaioKm(km), 350);
+  }
+
+  atualizarRaioKm(km, centroOverride) {
+    const centro = centroOverride || this.state.mRaioCentro;
+    if (!centro) return;
+    this.setState({ mRaioCarregando: true });
+    apiGet('/api/mercado/municipios-no-raio?lat=' + centro.lat + '&lon=' + centro.lon + '&raio_km=' + km)
+      .then(r => this.setState({ mMunicipios: r.municipios, mRaioCarregando: false, mDataVersion: this.state.mDataVersion + 1 }))
+      .catch(e => this.setState({ mRaioCarregando: false, apiError: 'Não foi possível calcular o raio: ' + e.message }));
+  }
+
+  removerRaio() {
+    this.setState({ mRaioCentro: null, mMunicipios: [], mDataVersion: this.state.mDataVersion + 1 });
+  }
+
   abrirEstudoRegionalDoEstado(uf) {
     const st = this.state;
     const anterior = { mEscopo: st.mEscopo, mUfs: st.mUfs, mRegioes: st.mRegioes };
@@ -2646,7 +2734,11 @@ class Component extends DCLogic {
     // qualquer outra coisa mudou (trocou filtro/estudo/escopo), a extensão é outra
     // e o zoom antigo não faz mais sentido — reseta.
     const extentKey = [st.mMode, st.mMetric, st.mEscopo, st.mUfs.join(''), st.mRegioes.join(''), st.mCnaes.join(''), el.clientWidth, st.mDataVersion, st.cnpjLocalizado && st.cnpjLocalizado.lat].join('|');
-    const key = extentKey + '|' + (this._munBTick || 0);
+    // raio (centro+km) fora do extentKey de propósito — arrastar o slider redesenha
+    // o círculo na hora (key muda), mas não deve resetar o zoom/pan atual, só a
+    // troca de filtro/escopo de verdade justifica isso
+    const raioKey = st.mRaioKm + '|' + (st.mRaioCentro ? st.mRaioCentro.lat + ',' + st.mRaioCentro.lon : '') + '|' + st.mRaioSelecionando;
+    const key = extentKey + '|' + (this._munBTick || 0) + '|' + raioKey;
     if (el.dataset.key === key) return;
     el.dataset.key = key;
     if (this._lastExtentKey !== extentKey) { this._mapT = null; this._lastExtentKey = extentKey; }
@@ -3182,8 +3274,34 @@ class Component extends DCLogic {
         const swPino = 1 / T.k;
         clientesPts.forEach(p => {
           const r = Math.max(2, p.r / Math.pow(T.k, .72));
-          this._desenharPino(ctx, p.x, p.y, r, '#1a1a1a', swPino);
+          this._desenharPino(ctx, p.x, p.y, r, '#D93025', swPino);
         });
+      }
+      if (st.mRaioCentro) {
+        // círculo GEOGRÁFICO de verdade (não um círculo em pixel) — calcula pontos
+        // reais ao longo da circunferência a {{mRaioKm}} de distância do centro e
+        // projeta cada um, senão o círculo saía visualmente distorcido/elíptico
+        // longe do equador (Mercator não preserva distância)
+        const N = 72, anelPts = [];
+        for (let i = 0; i <= N; i++) {
+          const bearing = (360 / N) * i;
+          const destino = pontoDestinoGeo(st.mRaioCentro.lat, st.mRaioCentro.lon, bearing, st.mRaioKm);
+          const xy = proj(destino);
+          if (xy) anelPts.push(xy);
+        }
+        if (anelPts.length > 2) {
+          ctx.beginPath();
+          ctx.moveTo(anelPts[0][0], anelPts[0][1]);
+          anelPts.slice(1).forEach(p => ctx.lineTo(p[0], p[1]));
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(241,90,34,.08)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(241,90,34,.85)';
+          ctx.lineWidth = 1.6 / T.k;
+          ctx.stroke();
+        }
+        const centroXY = proj([st.mRaioCentro.lon, st.mRaioCentro.lat]);
+        if (centroXY) this._desenharPino(ctx, centroXY[0], centroXY[1], 7 / Math.pow(T.k, .5), ORANGE, 1.2 / T.k);
       }
       if (cnpjXY) {
         const r = 9 / Math.pow(T.k, .5);
@@ -3307,6 +3425,14 @@ class Component extends DCLogic {
       // praticamente não se moveu entre o mousedown e o click
       if (downAt && Math.hypot(ev.clientX - downAt.x, ev.clientY - downAt.y) > 4) return;
       const mx = (ev.offsetX - T.x) / T.k, my = (ev.offsetY - T.y) / T.k;
+
+      // 0) "modo mira" do raio de abrangência: o próximo clique define o centro,
+      // em qualquer zoom/escopo — não abre ponto nem estado
+      if (st.mRaioSelecionando) {
+        const geo = proj.invert([mx, my]);
+        if (geo) this.definirCentroRaio(geo[1], geo[0]); // invert devolve [lon, lat]
+        return;
+      }
 
       // 1) pino de destaque (cliente Let's) tem prioridade — é o mais específico.
       // Abre só os clientes daquele local (no setor certo, se veio de "comparar setores").
@@ -3932,6 +4058,19 @@ class Component extends DCLogic {
       ],
       mercadoDropsGrid: 'display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: start;',
       escopoScopeLabel: st.mEscopo === 'nacional' ? 'Brasil — 27 UFs' : shownUfs.length + (shownUfs.length === 1 ? ' estado no mapa' : ' estados no mapa'),
+      mRaioSelecionando: st.mRaioSelecionando,
+      mRaioSemCentro: !st.mRaioCentro,
+      mRaioComCentro: !!st.mRaioCentro,
+      onIniciarRaio: () => this.iniciarSelecaoRaio(),
+      onCancelarRaio: () => this.cancelarSelecaoRaio(),
+      raioBtnLabel: st.mRaioSelecionando ? 'Clique no mapa…' : 'Definir raio no mapa',
+      raioBtnStyle: 'padding: 8px 14px; border-radius: 999px; font-size: 12px; cursor: pointer; white-space: nowrap; ' +
+        (st.mRaioSelecionando ? 'background: ' + ORANGE + '; color: #fff; font-weight: 600;' : 'border: 1px solid #d8dbdf; color: #2F323B;'),
+      onMudarRaioKm: (e) => this.agendarAtualizarRaio(parseInt(e.target.value, 10)),
+      mRaioKm: st.mRaioKm,
+      mRaioKmLabel: st.mRaioKm + ' km',
+      mRaioMunicipiosLabel: st.mRaioCarregando ? 'calculando…' : fmtInt(st.mMunicipios.length) + ' município(s) no raio',
+      onRemoverRaio: () => this.removerRaio(),
       mCnaeQuery: st.mCnaeQuery,
       mCnaeCaret: st.mCnaeListOpen ? '▴' : '▾',
       onToggleMCnae: (e) => { e.stopPropagation(); this.setState({ mCnaeListOpen: !st.mCnaeListOpen, open: null }); },
