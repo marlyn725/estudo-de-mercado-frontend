@@ -3504,12 +3504,23 @@ class Component extends DCLogic {
 
     let raf = 0;
     const schedule = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; draw(); }); };
-    // posição (em coordenadas de mundo, antes do zoom/pan) do pino do raio agora —
-    // lê this.state ao vivo, não `st`, porque o pino pode ter sido movido desde o
-    // último paintMap() completo (arrastar só redesenha leve, ver redesenharRaioLeve)
-    const raioPinoXY = () => {
+    // acerta um clique/toque em QUALQUER parte visível do pino do raio — a cabeça
+    // (círculo grande) OU o cone abaixo dela, não só bem na pontinha exata (que era
+    // o bug: o alvo de arrastar só cobria a ponta do cone, ignorando o círculo
+    // enorme e óbvio desenhado por cima). Mesma geometria de _desenharPino: cabeça
+    // centrada em r*1.7 acima da ponta, raio r — um círculo só, centrado a meio
+    // caminho entre a ponta e o topo da cabeça, com folga, cobre a forma inteira.
+    // Lê this.state ao vivo (não `st`), porque o pino pode ter sido movido desde o
+    // último paintMap() completo (arrastar só redesenha leve, ver redesenharRaioLeve).
+    const raioPinoHit = (mx, my) => {
       const centro = this.state.mRaioCentro;
-      return centro ? proj([centro.lon, centro.lat]) : null;
+      if (!centro) return false;
+      const ponta = proj([centro.lon, centro.lat]);
+      if (!ponta) return false;
+      const r = 7 / Math.pow(T.k, 0.5);
+      const alvoY = ponta[1] - r;
+      const raioAlvo = r * 1.8 + 6 / T.k;
+      return (mx - ponta[0]) * (mx - ponta[0]) + (my - alvoY) * (my - alvoY) <= raioAlvo * raioAlvo;
     };
     const zoom = d3.zoom().scaleExtent([1, 60]).translateExtent([[0, 0], [w, h]])
       .filter((ev) => {
@@ -3518,12 +3529,8 @@ class Component extends DCLogic {
         // bem em cima dele, pra dar pra reposicionar o raio sem cancelar e
         // escolher um centro novo do zero (ver mousedown mais abaixo)
         if ((ev.type === 'mousedown' || ev.type === 'pointerdown') && !this.state.mRaioSelecionando) {
-          const pino = raioPinoXY();
-          if (pino) {
-            const mx = (ev.offsetX - T.x) / T.k, my = (ev.offsetY - T.y) / T.k;
-            const raioHit = 16 / T.k;
-            if ((mx - pino[0]) * (mx - pino[0]) + (my - pino[1]) * (my - pino[1]) < raioHit * raioHit) return false;
-          }
+          const mx = (ev.offsetX - T.x) / T.k, my = (ev.offsetY - T.y) / T.k;
+          if (raioPinoHit(mx, my)) return false;
         }
         return true;
       })
@@ -3600,29 +3607,25 @@ class Component extends DCLogic {
       // centro novo do zero — o zoom.filter acima já bloqueou o pan do mapa
       // quando o clique começa em cima do pino, então só resta mover ele.
       if (!this.state.mRaioSelecionando) {
-        const pino = raioPinoXY();
-        if (pino) {
-          const mx0 = (ev.offsetX - T.x) / T.k, my0 = (ev.offsetY - T.y) / T.k;
-          const raioHit = 16 / T.k;
-          if ((mx0 - pino[0]) * (mx0 - pino[0]) + (my0 - pino[1]) * (my0 - pino[1]) < raioHit * raioHit) {
-            const rect = canvas.getBoundingClientRect();
-            canvas.style.cursor = 'grabbing';
-            let moveu = false;
-            const aoMover = (mv) => {
-              moveu = true;
-              const lx = mv.clientX - rect.left, ly = mv.clientY - rect.top;
-              const geo = proj.invert([(lx - T.x) / T.k, (ly - T.y) / T.k]);
-              if (geo) this.arrastarPinoRaio(geo[1], geo[0]);
-            };
-            const aoSoltar = () => {
-              window.removeEventListener('mousemove', aoMover);
-              window.removeEventListener('mouseup', aoSoltar);
-              canvas.style.cursor = this.state.mRaioSelecionando ? CURSOR_PINO_RAIO : 'grab';
-              if (moveu) this.finalizarArrastoPinoRaio();
-            };
-            window.addEventListener('mousemove', aoMover);
-            window.addEventListener('mouseup', aoSoltar);
-          }
+        const mx0 = (ev.offsetX - T.x) / T.k, my0 = (ev.offsetY - T.y) / T.k;
+        if (raioPinoHit(mx0, my0)) {
+          const rect = canvas.getBoundingClientRect();
+          canvas.style.cursor = 'grabbing';
+          let moveu = false;
+          const aoMover = (mv) => {
+            moveu = true;
+            const lx = mv.clientX - rect.left, ly = mv.clientY - rect.top;
+            const geo = proj.invert([(lx - T.x) / T.k, (ly - T.y) / T.k]);
+            if (geo) this.arrastarPinoRaio(geo[1], geo[0]);
+          };
+          const aoSoltar = () => {
+            window.removeEventListener('mousemove', aoMover);
+            window.removeEventListener('mouseup', aoSoltar);
+            canvas.style.cursor = this.state.mRaioSelecionando ? CURSOR_PINO_RAIO : 'grab';
+            if (moveu) this.finalizarArrastoPinoRaio();
+          };
+          window.addEventListener('mousemove', aoMover);
+          window.addEventListener('mouseup', aoSoltar);
         }
       }
     });
