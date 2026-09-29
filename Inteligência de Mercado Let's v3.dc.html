@@ -1113,7 +1113,7 @@ a:hover { opacity: .75; }
 
                 <sc-if value="{{ mSetorUnico }}" hint-placeholder-val="{{ false }}">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
-                  <sc-for list="{{ insights }}" as="i" hint-placeholder-count="5">
+                  <sc-for list="{{ insights }}" as="i" hint-placeholder-count="6">
                     <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;">
                       <div style="font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">{{ i.label }}</div>
                       <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 21px; font-weight: 700; color: #000; line-height: 1;">{{ i.value }}</div>
@@ -4348,6 +4348,14 @@ class Component extends DCLogic {
       },
       insights: [
         {
+          label: st.mMunicipios.length ? 'Empresas no recorte' : 'Mercado do perfil',
+          value: fmtInt(clientesRec + insightsReal.mercado_enderecavel),
+          note: 'total de empresas do recorte (clientes + endereçável)'
+        },
+        st.mMunicipios.length ? {
+          label: 'Municípios no recorte', value: fmtInt(st.mMunicipios.length),
+          note: 'quantos municípios caem dentro do recorte geográfico escolhido'
+        } : {
           label: 'Praças concentradas', value: top3.length ? top3.join(' · ') : '—',
           note: mTotal > 0 && top3.length ? Math.round(top3.reduce((a, u) => a + (mVals[u] || 0), 0) / mTotal * 100) + '% do mercado do perfil · ' + insightsReal.pracas_concentradas + ' praça(s) no total' : 'nenhuma praça no recorte'
         },
@@ -4380,7 +4388,11 @@ class Component extends DCLogic {
           enderecavelFmt: fmtInt(i.mercado_enderecavel)
         }));
       })(),
-      hasRankingRegional: !!(mEstudo && mEstudo.ranking_regional && mEstudo.ranking_regional.length),
+      // some quando há um recorte de município ativo (raio ou seleção manual) — a
+      // comparação nacional entre as 3 regionais não tem relação com um recorte
+      // geográfico fino, fica desconectada do que está na tela (ver conversa com
+      // o usuário: raio de 40km mostrando os totais do Brasil inteiro por regional)
+      hasRankingRegional: !st.mMunicipios.length && !!(mEstudo && mEstudo.ranking_regional && mEstudo.ranking_regional.length),
       rankingRegionalRows: (() => {
         const itens = (mEstudo && mEstudo.ranking_regional) || [];
         const maxTotal = Math.max(1, ...itens.map(i => i.total));
