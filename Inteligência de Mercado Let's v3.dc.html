@@ -26,6 +26,7 @@ a:hover { opacity: .75; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: #cfd2d6; border-radius: 8px; }
 @keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes raioPop { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
 </style>
 </helmet>
 
@@ -1068,15 +1069,19 @@ a:hover { opacity: .75; }
                       </div>
                     </sc-if>
 
-                    <sc-if value="{{ mRaioComCentro }}" hint-placeholder-val="{{ false }}">
-                      <div style="{{ raioBarraStyle }}" style-hover="{{ raioBarraHoverStyle }}">
-                        <span style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #2F323B; font-weight: 700; white-space: nowrap; flex: 0 0 auto;">📍 Raio</span>
-                        <span style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13.5px; font-weight: 700; color: #1a73e8; white-space: nowrap; flex: 0 0 auto;">{{ mRaioKmLabel }}</span>
+                    <sc-if value="{{ mRaioBarraExpandida }}" hint-placeholder-val="{{ false }}">
+                      <div style="{{ glassBarStyle }} animation: raioPop .18s ease-out;">
+                        <span style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #2F323B; font-weight: 700; white-space: nowrap;">📍 Raio</span>
                         <input type="range" min="5" max="300" step="5" value="{{ mRaioKm }}" onChange="{{ onMudarRaioKm }}" style="flex: 1; min-width: 140px; max-width: 320px;">
+                        <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13.5px; font-weight: 700; color: #000; white-space: nowrap; width: 56px;">{{ mRaioKmLabel }}</div>
                         <div style="font-size: 11.5px; color: #2F323B; white-space: nowrap;">{{ mRaioMunicipiosLabel }}</div>
                         <div onClick="{{ onAplicarRaio }}" style="{{ aplicarRaioBtnStyle }}">{{ aplicarRaioBtnLabel }}</div>
                         <div onClick="{{ onRemoverRaio }}" style="font-size: 11.5px; color: #2F323B; text-decoration: underline; cursor: pointer; white-space: nowrap;">remover</div>
                       </div>
+                    </sc-if>
+
+                    <sc-if value="{{ mRaioBarraRecolhidaAtiva }}" hint-placeholder-val="{{ false }}">
+                      <div onClick="{{ onExpandirRaioBarra }}" style="{{ raioPillStyle }}" style-hover="background: rgba(255,255,255,.96); box-shadow: 0 6px 18px rgba(17,15,12,.22);">📍 Raio · {{ mRaioKmLabel }}</div>
                     </sc-if>
                   </div>
                   <sc-if value="{{ isMultiSetor }}" hint-placeholder-val="{{ false }}">
@@ -3541,9 +3546,9 @@ class Component extends DCLogic {
       }
 
       // 0b) qualquer outro clique no mapa (explorando o resultado) recolhe a
-      // barra do raio pra não tampar a visualização — ela some com uma animação
-      // e vira só um indicador opaco no canto; passar o mouse por cima expande
-      // de novo (ver glassBarStyle/raioBarraStyle, tratado só via CSS :hover).
+      // barra do raio pra um selo compacto no canto, sem tampar a visualização —
+      // clicar de novo no selo (mRaioBarraRecolhidaAtiva/onExpandirRaioBarra)
+      // expande a barra cheia de volta.
       if (this.state.mRaioCentro && !this.state.mRaioBarraRecolhida) {
         this.setState({ mRaioBarraRecolhida: true });
       }
@@ -4174,7 +4179,6 @@ class Component extends DCLogic {
       escopoScopeLabel: st.mEscopo === 'nacional' ? 'Brasil — 27 UFs' : shownUfs.length + (shownUfs.length === 1 ? ' estado no mapa' : ' estados no mapa'),
       mRaioSelecionando: st.mRaioSelecionando,
       mRaioSemCentro: !st.mRaioCentro,
-      mRaioComCentro: !!st.mRaioCentro,
       onIniciarRaio: () => this.iniciarSelecaoRaio(),
       onCancelarRaio: () => this.cancelarSelecaoRaio(),
       raioBtnLabel: st.mRaioSelecionando ? 'Clique no mapa…' : 'Definir raio no mapa',
@@ -4191,17 +4195,19 @@ class Component extends DCLogic {
         'background: rgba(255,255,255,.72); backdrop-filter: blur(12px) saturate(1.6); -webkit-backdrop-filter: blur(12px) saturate(1.6); ' +
         'border: 1px solid rgba(255,255,255,.5); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; ' +
         'flex-wrap: wrap; font-size: 12px; color: #2F323B; box-shadow: 0 4px 14px rgba(17,15,12,.14);',
-      // barra do raio JÁ aplicado: igual à glassBarStyle, mas com largura animável
-      // (overflow escondido) — recolhida vira só um selo opaco "📍 Raio · 50 km" no
-      // canto; passar o mouse expande de novo (style-hover), sem precisar de JS
-      // pro hover (o :hover reverte sozinho quando o mouse sai, por ser CSS puro)
-      raioBarraStyle: 'position: absolute; top: 12px; left: 12px; z-index: 6; ' +
-        'background: rgba(255,255,255,.72); backdrop-filter: blur(12px) saturate(1.6); -webkit-backdrop-filter: blur(12px) saturate(1.6); ' +
-        'border: 1px solid rgba(255,255,255,.5); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; ' +
-        'font-size: 12px; color: #2F323B; box-shadow: 0 4px 14px rgba(17,15,12,.14); overflow: hidden; white-space: nowrap; ' +
-        'transition: width .32s cubic-bezier(.4,0,.2,1), background .2s ease; ' +
-        (st.mRaioBarraRecolhida ? 'width: 148px; cursor: pointer; background: rgba(255,255,255,.85);' : 'width: calc(100% - 72px);'),
-      raioBarraHoverStyle: 'width: calc(100% - 72px); cursor: default;',
+      // barra do raio já aplicado tem dois estados, cada um seu próprio elemento
+      // (evita reaplicar o estilo pesado — vidro fosco + overflow — a cada tick
+      // do slider, que era o que estava deixando o arraste lento): a barra cheia
+      // some/aparece com um "pop" (leve escala+fade), e vira um selo compacto no
+      // canto sempre que o usuário clica no mapa pra explorar o resultado.
+      mRaioBarraExpandida: !!st.mRaioCentro && !st.mRaioBarraRecolhida,
+      mRaioBarraRecolhidaAtiva: !!st.mRaioCentro && !!st.mRaioBarraRecolhida,
+      onExpandirRaioBarra: () => this.setState({ mRaioBarraRecolhida: false }),
+      raioPillStyle: 'position: absolute; top: 12px; left: 12px; z-index: 6; cursor: pointer; ' +
+        'background: rgba(255,255,255,.78); backdrop-filter: blur(12px) saturate(1.6); -webkit-backdrop-filter: blur(12px) saturate(1.6); ' +
+        'border: 1px solid rgba(255,255,255,.5); border-radius: 999px; padding: 9px 16px; white-space: nowrap; ' +
+        'font-family: \'Neo Sans Pro\', sans-serif; font-size: 12.5px; font-weight: 700; color: #1a73e8; ' +
+        'box-shadow: 0 4px 14px rgba(17,15,12,.14); animation: raioPop .22s ease-out;',
       onMudarRaioKm: (e) => this.agendarAtualizarRaio(parseInt(e.target.value, 10)),
       mRaioKm: st.mRaioKm,
       mRaioKmLabel: st.mRaioKm + ' km',
