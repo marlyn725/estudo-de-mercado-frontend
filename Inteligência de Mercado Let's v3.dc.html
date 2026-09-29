@@ -1070,7 +1070,7 @@ a:hover { opacity: .75; }
                     </sc-if>
 
                     <sc-if value="{{ mRaioBarraExpandida }}" hint-placeholder-val="{{ false }}">
-                      <div style="{{ glassBarStyle }} animation: raioPop .18s ease-out;">
+                      <div onMouseEnter="{{ onRaioBarraMouseEnter }}" onMouseLeave="{{ onRaioBarraMouseLeave }}" style="{{ glassBarStyle }} animation: raioPop .18s ease-out;">
                         <span style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #2F323B; font-weight: 700; white-space: nowrap;">📍 Raio</span>
                         <input type="range" min="5" max="300" step="5" value="{{ mRaioKm }}" onChange="{{ onMudarRaioKm }}" style="flex: 1; min-width: 140px; max-width: 320px;">
                         <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 13.5px; font-weight: 700; color: #000; white-space: nowrap; width: 56px;">{{ mRaioKmLabel }}</div>
@@ -1081,7 +1081,7 @@ a:hover { opacity: .75; }
                     </sc-if>
 
                     <sc-if value="{{ mRaioBarraRecolhidaAtiva }}" hint-placeholder-val="{{ false }}">
-                      <div onClick="{{ onExpandirRaioBarra }}" style="{{ raioPillStyle }}" style-hover="background: rgba(255,255,255,.96); box-shadow: 0 6px 18px rgba(17,15,12,.22);">📍 Raio · {{ mRaioKmLabel }}</div>
+                      <div onMouseEnter="{{ onExpandirRaioBarra }}" onClick="{{ onExpandirRaioBarra }}" style="{{ raioPillStyle }}" style-hover="background: rgba(255,255,255,.96); box-shadow: 0 6px 18px rgba(17,15,12,.22);">📍 Raio · {{ mRaioKmLabel }}</div>
                     </sc-if>
                   </div>
                   <sc-if value="{{ isMultiSetor }}" hint-placeholder-val="{{ false }}">
@@ -2619,6 +2619,31 @@ class Component extends DCLogic {
     this.atualizarCursorMapa(false);
   }
 
+  // a barra cheia do raio recolhe sozinha ~3.5s depois do mouse sair dela — não
+  // mais ao clicar no mapa (isso arriscava um clique acidental tanto recolher
+  // quanto, no mesmo clique, abrir um ponto/estado por baixo). onMouseEnter da
+  // própria barra cancela o timer; onMouseLeave reinicia; e ela já nasce com o
+  // timer ligado (chamado no fim de definirCentroRaio/aplicarRaio/expandir).
+  iniciarTimerColapsoRaio() {
+    clearTimeout(this._raioColapsoT);
+    this._raioColapsoT = setTimeout(() => {
+      if (this.state.mRaioCentro) this.setState({ mRaioBarraRecolhida: true });
+    }, 3500);
+  }
+
+  cancelarTimerColapsoRaio() {
+    clearTimeout(this._raioColapsoT);
+  }
+
+  // selo recolhido -> barra cheia, disparado por hover (ou clique, de brinde,
+  // pra touch) sobre o selo. Não reinicia o timer de colapso na hora — o mouse
+  // já está em cima do selo/barra nesse momento, reiniciar aqui deixaria a barra
+  // recolhendo de novo sozinha embaixo do próprio cursor.
+  expandirRaioBarra() {
+    this.cancelarTimerColapsoRaio();
+    this.setState({ mRaioBarraRecolhida: false });
+  }
+
   // desenha só o círculo/pino por cima do que já está na tela, reaproveitando o
   // calor/pontos que o último paintMap() completo já calculou (this._mapDraw,
   // salvo lá dentro) — não refaz o mapa inteiro. É isso que faz o slider do raio
@@ -2640,6 +2665,29 @@ class Component extends DCLogic {
     }, () => this.redesenharRaioLeve());
     this.atualizarCursorMapa(false);
     this.atualizarRaioKm(this.state.mRaioKm || 50, { lat, lon });
+    this.iniciarTimerColapsoRaio();
+  }
+
+  // arrastar o PINO (não o slider) pra reposicionar o raio sem cancelar e
+  // escolher um centro novo do zero — mesmo princípio de agendarAtualizarRaio:
+  // o mousemove dispara dezenas de vezes por segundo, junta num redesenho leve
+  // só por quadro de tela em vez de um setState (e paintMap) a cada pixel.
+  arrastarPinoRaio(lat, lon) {
+    this._pinoRaioPendente = { lat, lon };
+    if (!this._pinoRaioRaf) {
+      this._pinoRaioRaf = requestAnimationFrame(() => {
+        this._pinoRaioRaf = null;
+        this.setState({ mRaioCentro: this._pinoRaioPendente }, () => this.redesenharRaioLeve());
+      });
+    }
+  }
+
+  // ao soltar o pino: só agora recalcula quantos municípios entram no raio na
+  // posição nova (a mesma consulta leve que o slider já faz) — buscar os dados
+  // de verdade continua exigindo clicar "Aplicar raio", igual já era antes.
+  finalizarArrastoPinoRaio() {
+    this.atualizarRaioKm(this.state.mRaioKm, this.state.mRaioCentro);
+    this.iniciarTimerColapsoRaio();
   }
 
   // arrastar o slider dispara onChange várias vezes por segundo — junta essas
@@ -2680,23 +2728,34 @@ class Component extends DCLogic {
     // avisa o próximo paintMap() completo (disparado pela busca abaixo) pra
     // aproximar o mapa na área do raio, em vez de manter o zoom/escopo anterior
     this._zoomParaRaioPendente = true;
+    this.iniciarTimerColapsoRaio();
     if (this.setoresComparacaoAtivos().length >= 2) this.compararSetoresNoMapa();
     else this.carregarEstudoMercado();
   }
 
   removerRaio() {
+    this.cancelarTimerColapsoRaio();
     this.setState({ mRaioCentro: null, mMunicipios: [] }, () => this.redesenharRaioLeve());
   }
 
+  // "estudo regional do estado" (clique na área inteira de um estado, no calor
+  // nacional) é uma forma de recorte geográfico concorrente com o raio — mesma
+  // regra de "raio SUBSTITUI Município/Mesorregião/Região/Estado" já aplicada em
+  // definirCentroRaio, só que no sentido contrário. Sem isso, um clique no
+  // estado por baixo do raio (ex.: tentando interagir com o círculo) combinava
+  // "estado X inteiro" com "só os municípios do raio" — filtro contraditório que
+  // ora sobrava estado demais, ora sobrava raio demais, dependendo de onde caía.
   abrirEstudoRegionalDoEstado(uf) {
     const st = this.state;
     const anterior = { mEscopo: st.mEscopo, mUfs: st.mUfs, mRegioes: st.mRegioes };
+    this.cancelarTimerColapsoRaio();
     this.setState({
       mEscopo: 'regional', mUfs: [uf],
       mRegioes: Object.keys(REGIOES).filter(r => REGIOES[r].indexOf(uf) >= 0),
-      mVoltarAnterior: anterior
+      mVoltarAnterior: anterior,
+      mRaioCentro: null, mMunicipios: [], mRaioBarraRecolhida: false
     });
-    this.carregarEstudoMercado(this.buildFiltroMercado({ modo: 'regional', estados: [uf] }));
+    this.carregarEstudoMercado(this.buildFiltroMercado({ modo: 'regional', estados: [uf], municipios: [] }));
   }
 
   // setorOverride: usado quando o clique veio de um ponto colorido do modo
@@ -3461,7 +3520,29 @@ class Component extends DCLogic {
 
     let raf = 0;
     const schedule = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; draw(); }); };
+    // posição (em coordenadas de mundo, antes do zoom/pan) do pino do raio agora —
+    // lê this.state ao vivo, não `st`, porque o pino pode ter sido movido desde o
+    // último paintMap() completo (arrastar só redesenha leve, ver redesenharRaioLeve)
+    const raioPinoXY = () => {
+      const centro = this.state.mRaioCentro;
+      return centro ? proj([centro.lon, centro.lat]) : null;
+    };
     const zoom = d3.zoom().scaleExtent([1, 60]).translateExtent([[0, 0], [w, h]])
+      .filter((ev) => {
+        if (!((!ev.ctrlKey || ev.type === 'wheel') && !ev.button)) return false;
+        // deixa o pino "roubar" o gesto de arrastar o mapa quando o clique começa
+        // bem em cima dele, pra dar pra reposicionar o raio sem cancelar e
+        // escolher um centro novo do zero (ver mousedown mais abaixo)
+        if ((ev.type === 'mousedown' || ev.type === 'pointerdown') && !this.state.mRaioSelecionando) {
+          const pino = raioPinoXY();
+          if (pino) {
+            const mx = (ev.offsetX - T.x) / T.k, my = (ev.offsetY - T.y) / T.k;
+            const raioHit = 16 / T.k;
+            if ((mx - pino[0]) * (mx - pino[0]) + (my - pino[1]) * (my - pino[1]) < raioHit * raioHit) return false;
+          }
+        }
+        return true;
+      })
       .on('zoom', (ev) => {
         T = ev.transform;
         this._mapT = ev.transform;
@@ -3528,7 +3609,39 @@ class Component extends DCLogic {
     });
 
     let downAt = null;
-    canvas.addEventListener('mousedown', (ev) => { downAt = { x: ev.clientX, y: ev.clientY }; });
+    canvas.addEventListener('mousedown', (ev) => {
+      downAt = { x: ev.clientX, y: ev.clientY };
+
+      // arrastar o pino do raio pra reposicionar sem cancelar e escolher um
+      // centro novo do zero — o zoom.filter acima já bloqueou o pan do mapa
+      // quando o clique começa em cima do pino, então só resta mover ele.
+      if (!this.state.mRaioSelecionando) {
+        const pino = raioPinoXY();
+        if (pino) {
+          const mx0 = (ev.offsetX - T.x) / T.k, my0 = (ev.offsetY - T.y) / T.k;
+          const raioHit = 16 / T.k;
+          if ((mx0 - pino[0]) * (mx0 - pino[0]) + (my0 - pino[1]) * (my0 - pino[1]) < raioHit * raioHit) {
+            const rect = canvas.getBoundingClientRect();
+            canvas.style.cursor = 'grabbing';
+            let moveu = false;
+            const aoMover = (mv) => {
+              moveu = true;
+              const lx = mv.clientX - rect.left, ly = mv.clientY - rect.top;
+              const geo = proj.invert([(lx - T.x) / T.k, (ly - T.y) / T.k]);
+              if (geo) this.arrastarPinoRaio(geo[1], geo[0]);
+            };
+            const aoSoltar = () => {
+              window.removeEventListener('mousemove', aoMover);
+              window.removeEventListener('mouseup', aoSoltar);
+              canvas.style.cursor = this.state.mRaioSelecionando ? CURSOR_PINO_RAIO : 'grab';
+              if (moveu) this.finalizarArrastoPinoRaio();
+            };
+            window.addEventListener('mousemove', aoMover);
+            window.addEventListener('mouseup', aoSoltar);
+          }
+        }
+      }
+    });
     canvas.addEventListener('click', (ev) => {
       // só conta como clique (não como fim de um arraste de pan) se o ponteiro
       // praticamente não se moveu entre o mousedown e o click
@@ -3543,14 +3656,6 @@ class Component extends DCLogic {
         const geo = proj.invert([mx, my]);
         if (geo) this.definirCentroRaio(geo[1], geo[0]); // invert devolve [lon, lat]
         return;
-      }
-
-      // 0b) qualquer outro clique no mapa (explorando o resultado) recolhe a
-      // barra do raio pra um selo compacto no canto, sem tampar a visualização —
-      // clicar de novo no selo (mRaioBarraRecolhidaAtiva/onExpandirRaioBarra)
-      // expande a barra cheia de volta.
-      if (this.state.mRaioCentro && !this.state.mRaioBarraRecolhida) {
-        this.setState({ mRaioBarraRecolhida: true });
       }
 
       // 1) pino de destaque (cliente Let's) tem prioridade — é o mais específico.
@@ -4199,10 +4304,13 @@ class Component extends DCLogic {
       // (evita reaplicar o estilo pesado — vidro fosco + overflow — a cada tick
       // do slider, que era o que estava deixando o arraste lento): a barra cheia
       // some/aparece com um "pop" (leve escala+fade), e vira um selo compacto no
-      // canto sempre que o usuário clica no mapa pra explorar o resultado.
+      // canto sozinha ~3.5s depois que o mouse sai dela (não mais ao clicar no
+      // mapa — clicar clicava sem querer no que estivesse por baixo também).
       mRaioBarraExpandida: !!st.mRaioCentro && !st.mRaioBarraRecolhida,
       mRaioBarraRecolhidaAtiva: !!st.mRaioCentro && !!st.mRaioBarraRecolhida,
-      onExpandirRaioBarra: () => this.setState({ mRaioBarraRecolhida: false }),
+      onExpandirRaioBarra: () => this.expandirRaioBarra(),
+      onRaioBarraMouseEnter: () => this.cancelarTimerColapsoRaio(),
+      onRaioBarraMouseLeave: () => this.iniciarTimerColapsoRaio(),
       raioPillStyle: 'position: absolute; top: 12px; left: 12px; z-index: 6; cursor: pointer; ' +
         'background: rgba(255,255,255,.78); backdrop-filter: blur(12px) saturate(1.6); -webkit-backdrop-filter: blur(12px) saturate(1.6); ' +
         'border: 1px solid rgba(255,255,255,.5); border-radius: 999px; padding: 9px 16px; white-space: nowrap; ' +
