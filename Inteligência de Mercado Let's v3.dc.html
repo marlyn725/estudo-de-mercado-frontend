@@ -4527,8 +4527,8 @@ class Component extends DCLogic {
       // qualquer cor por baixo, igual ao contorno branco dos pinos no mapa.
       ...(() => {
         const modoBtnStyle = (k) => 'width: 32px; height: 32px; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; ' +
-          'backdrop-filter: blur(10px) saturate(1.6); -webkit-backdrop-filter: blur(10px) saturate(1.6); box-shadow: 0 2px 10px rgba(0,0,0,.25); ' +
-          (st.mMode === k ? 'background: rgba(241,90,34,.92); color: #fff; border: 1px solid rgba(255,255,255,.7);' : 'background: rgba(30,32,38,.68); color: #fff; border: 1px solid rgba(255,255,255,.35);');
+          'backdrop-filter: blur(10px) saturate(1.6); -webkit-backdrop-filter: blur(10px) saturate(1.6); box-shadow: 0 2px 10px rgba(0,0,0,.35); ' +
+          (st.mMode === k ? 'background: rgba(241,90,34,.95); color: #fff; border: 1px solid rgba(255,255,255,.8);' : 'background: rgba(20,21,26,.85); color: #fff; border: 1px solid rgba(255,255,255,.5);');
         return {
           modoCalor: { onClick: () => this.setState({ mMode: 'calor' }), tag: 'Mapa de calor', style: modoBtnStyle('calor') },
           modoDispersao: { onClick: () => this.setState({ mMode: 'dispersao' }), tag: 'Dispersão', style: modoBtnStyle('dispersao') },
@@ -4538,7 +4538,7 @@ class Component extends DCLogic {
       // opacidade bem baixa por padrão (quase "hidden") — sobe pra 1 no hover via
       // style-hover (ver template); precisa ser um valor ESTÁTICO ali (não um campo
       // interpolado), esse atributo do framework não resolve bindings dinâmicos.
-      modoBarraStyle: 'position: absolute; bottom: 14px; right: 14px; z-index: 6; display: flex; gap: 8px; opacity: .38; transition: opacity .2s ease;',
+      modoBarraStyle: 'position: absolute; bottom: 14px; right: 14px; z-index: 6; display: flex; gap: 8px; opacity: .72; transition: opacity .2s ease;',
       mapRef: this.mapRef,
       dashMapRef: this.dashMapRef,
       // antes tinha " — <lista enorme de CNAEs>" no fim — poluía o topo do mapa com
@@ -4592,9 +4592,9 @@ class Component extends DCLogic {
       onAbrirConcentracao: () => this.setState({ mConcentracaoAberta: true }),
       onFecharConcentracao: () => this.setState({ mConcentracaoAberta: false }),
       concentracaoPillStyle: 'position: absolute; bottom: 14px; left: 14px; z-index: 6; display: flex; align-items: center; gap: 7px; padding: 8px 14px; ' +
-        'border-radius: 999px; cursor: pointer; font-size: 12px; font-weight: 600; color: #fff; white-space: nowrap; opacity: .55; transition: opacity .2s ease; ' +
-        'backdrop-filter: blur(10px) saturate(1.6); -webkit-backdrop-filter: blur(10px) saturate(1.6); box-shadow: 0 2px 10px rgba(0,0,0,.25); ' +
-        'background: rgba(30,32,38,.68); border: 1px solid rgba(255,255,255,.35);',
+        'border-radius: 999px; cursor: pointer; font-size: 12px; font-weight: 600; color: #fff; white-space: nowrap; opacity: .78; transition: opacity .2s ease; ' +
+        'backdrop-filter: blur(10px) saturate(1.6); -webkit-backdrop-filter: blur(10px) saturate(1.6); box-shadow: 0 2px 10px rgba(0,0,0,.35); ' +
+        'background: rgba(20,21,26,.85); border: 1px solid rgba(255,255,255,.5);',
       concentracaoCardStyle: 'position: absolute; bottom: 14px; left: 14px; z-index: 6; width: 260px; max-height: calc(100% - 28px); ' +
         'display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 10px; animation: raioPop .16s ease-out; ' +
         'background: rgba(30,32,38,.92); backdrop-filter: blur(12px) saturate(1.6); -webkit-backdrop-filter: blur(12px) saturate(1.6); ' +
