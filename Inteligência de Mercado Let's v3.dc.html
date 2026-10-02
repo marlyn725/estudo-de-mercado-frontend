@@ -1071,11 +1071,20 @@ a:hover { opacity: .75; }
 
                     <!-- modos do mapa (calor/dispersão/por estado) — quase invisível até passar
                          o mouse por cima (opacidade baixa + style-hover), pra não competir com
-                         o mapa em si; mesmo estilo "vidro" das barras do raio, só que discreto -->
+                         o mapa em si; mesmo estilo "vidro" das barras do raio, só que discreto.
+                         Ícones em SVG (linha fina, cor = currentColor) em vez de emoji — os
+                         emoji coloridos destoavam da identidade visual do sistema. Só 3 botões
+                         fixos, por isso vão direto no template (sem sc-for). -->
                     <div style="{{ modoBarraStyle }}" style-hover="opacity: 1;">
-                      <sc-for list="{{ mapModes }}" as="m" hint-placeholder-count="3">
-                        <div onClick="{{ m.onClick }}" title="{{ m.tag }}" style="{{ m.style }}">{{ m.label }}</div>
-                      </sc-for>
+                      <div onClick="{{ modoCalor.onClick }}" title="{{ modoCalor.tag }}" style="{{ modoCalor.style }}">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.1"></circle><path d="M7 12a5 5 0 0 1 5-5"></path><path d="M4 12a8 8 0 0 1 8-8"></path><path d="M17 12a5 5 0 0 0-5-5"></path><path d="M20 12a8 8 0 0 0-8-8"></path></svg>
+                      </div>
+                      <div onClick="{{ modoDispersao.onClick }}" title="{{ modoDispersao.tag }}" style="{{ modoDispersao.style }}">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="7" cy="14.5" r="2.5"></circle><circle cx="16" cy="7" r="1.7"></circle><circle cx="17.5" cy="16.5" r="1.3"></circle><circle cx="10" cy="6.5" r="1.2"></circle></svg>
+                      </div>
+                      <div onClick="{{ modoEstado.onClick }}" title="{{ modoEstado.tag }}" style="{{ modoEstado.style }}">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z"></path><path d="M9 4v14"></path><path d="M15 6v14"></path></svg>
+                      </div>
                     </div>
                   </div>
                   <sc-if value="{{ isMultiSetor }}" hint-placeholder-val="{{ false }}">
@@ -4499,20 +4508,21 @@ class Component extends DCLogic {
       // modos do mapa (calor/dispersão/por estado) — estilo "camadas" do Google Maps:
       // só os ícones, no canto inferior direito, quase invisíveis até passar o mouse
       // (ver modoBarraStyle). O nome completo vira o title (tooltip nativo) de cada
-      // botão — sem isso não dava pra saber o que cada ícone representa.
+      // botão. Ícones em SVG de linha fina (ver template) — emoji coloridos destoavam
+      // da identidade visual do sistema e ficavam "infantis" (relatado pelo usuário).
       // Fundo ESCURO translúcido (não branco) + contorno claro: um chip claro sobre
       // mapa de calor claro/branco ficava ilegível (relatado); escuro contrasta com
       // qualquer cor por baixo, igual ao contorno branco dos pinos no mapa.
-      mapModes: [
-        ['calor', '🔥', 'Mapa de calor'],
-        ['dispersao', '⁘', 'Dispersão'],
-        ['estado', '🗺️', 'Concentração por estado']
-      ].map(([k, icon, nome]) => ({
-        label: icon, tag: nome, onClick: () => this.setState({ mMode: k }),
-        style: 'width: 34px; height: 34px; border-radius: 999px; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; ' +
+      ...(() => {
+        const modoBtnStyle = (k) => 'width: 32px; height: 32px; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; ' +
           'backdrop-filter: blur(10px) saturate(1.6); -webkit-backdrop-filter: blur(10px) saturate(1.6); box-shadow: 0 2px 10px rgba(0,0,0,.25); ' +
-          (st.mMode === k ? 'background: rgba(241,90,34,.92); border: 1px solid rgba(255,255,255,.7);' : 'background: rgba(30,32,38,.68); border: 1px solid rgba(255,255,255,.35);')
-      })),
+          (st.mMode === k ? 'background: rgba(241,90,34,.92); color: #fff; border: 1px solid rgba(255,255,255,.7);' : 'background: rgba(30,32,38,.68); color: #fff; border: 1px solid rgba(255,255,255,.35);');
+        return {
+          modoCalor: { onClick: () => this.setState({ mMode: 'calor' }), tag: 'Mapa de calor', style: modoBtnStyle('calor') },
+          modoDispersao: { onClick: () => this.setState({ mMode: 'dispersao' }), tag: 'Dispersão', style: modoBtnStyle('dispersao') },
+          modoEstado: { onClick: () => this.setState({ mMode: 'estado' }), tag: 'Concentração por estado', style: modoBtnStyle('estado') }
+        };
+      })(),
       // opacidade bem baixa por padrão (quase "hidden") — sobe pra 1 no hover via
       // style-hover (ver template); precisa ser um valor ESTÁTICO ali (não um campo
       // interpolado), esse atributo do framework não resolve bindings dinâmicos.
