@@ -111,7 +111,7 @@ a:hover { opacity: .75; }
             </div>
 
             <sc-for list="{{ topDrops }}" as="d" hint-placeholder-count="2">
-              <div data-dd="top" style="position: relative; display: flex; flex-direction: column; gap: 6px; z-index: 10;">
+              <div data-dd="top" style="{{ d.wrapStyle }} display: flex; flex-direction: column; gap: 6px;">
                 <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">{{ d.label }}</div>
                 <div onClick="{{ d.onToggle }}" style="{{ d.headStyle }}">
                   <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ d.summary }}</span>
@@ -262,7 +262,7 @@ a:hover { opacity: .75; }
 
             <div style="{{ mercadoDropsGrid }}">
               <sc-for list="{{ mercadoDrops }}" as="d" hint-placeholder-count="4">
-                <div data-dd="mercado" style="position: relative; display: flex; flex-direction: column; gap: 6px;">
+                <div data-dd="mercado" style="{{ d.wrapStyle }} display: flex; flex-direction: column; gap: 6px;">
                   <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">{{ d.label }}</div>
                   <div onClick="{{ d.onToggle }}" style="{{ d.headStyle }}">
                     <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ d.summary }}</span>
@@ -736,7 +736,7 @@ a:hover { opacity: .75; }
               <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; align-items: start;">
                   <sc-for list="{{ buscaDrops }}" as="d" hint-placeholder-count="4">
-                    <div data-dd="busca" style="position: relative; display: flex; flex-direction: column; gap: 6px; z-index: 6;">
+                    <div data-dd="busca" style="{{ d.wrapStyle }} display: flex; flex-direction: column; gap: 6px;">
                       <div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">{{ d.label }}</div>
                       <div onClick="{{ d.onToggle }}" title="{{ d.hint }}" style="{{ d.headStyle }}">
                         <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ d.summary }}</span>
@@ -3806,6 +3806,12 @@ class Component extends DCLogic {
       label, hint, open, caret: open ? '▴' : '▾',
       summary: sel.length === 0 ? 'Todos' : sel.length <= 2 ? sel.map(labelOf).join(', ') : sel.length + ' selecionados',
       onToggle: (e) => { e.stopPropagation(); this.setState({ open: open ? null : id, cnaeListOpen: false }); },
+      // z-index dinâmico: sem isso, quando vários desses dropdowns ficam em COLUNA
+      // única (empilhados), o que estiver mais embaixo no DOM sempre "ganha" o
+      // empate de z-index e aparece por cima do popup do que estiver aberto acima
+      // dele — bug relatado ("dropdowns sobrepondo"). Ligar o z-index a "está
+      // aberto" garante que o aberto sempre fica por cima, não importa a ordem.
+      wrapStyle: 'position: relative; z-index: ' + (open ? 50 : 1) + ';',
       headStyle: 'display: flex; align-items: center; gap: 8px; border: 1px solid ' + (open ? ORANGE : '#d8dbdf') + '; border-radius: 6px; padding: 9px 11px; font-size: 12.5px; color: #2F323B; cursor: pointer; background: #fff;',
       items: norm.map(o => {
         const on = sel.indexOf(o.value) >= 0;
@@ -3824,6 +3830,8 @@ class Component extends DCLogic {
       label, open, caret: open ? '▴' : '▾',
       summary: cur && cur !== '—' ? (options.find(o => (o.value || o) === cur) || {}).label || cur : (allLabel || 'Todos'),
       onToggle: (e) => { e.stopPropagation(); this.setState({ open: open ? null : id, cnaeListOpen: false }); },
+      // mesma ideia de z-index dinâmico do dropdown() — ver comentário lá
+      wrapStyle: 'position: relative; z-index: ' + (open ? 50 : 1) + ';',
       headStyle: 'display: flex; align-items: center; gap: 8px; border: 1px solid ' + (open ? ORANGE : '#d8dbdf') + '; border-radius: 6px; padding: 8px 11px; font-size: 12.5px; color: #2F323B; cursor: pointer; background: #fff; width: 100%;',
       items: options.map(o => {
         const v = o.value || o, l = o.label || o;
