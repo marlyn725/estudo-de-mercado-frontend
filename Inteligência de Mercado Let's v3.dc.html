@@ -1040,6 +1040,7 @@ a:hover { opacity: .75; }
                   <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000;">Empresas parecidas com {{ mClonePerfil.razao_social }}</div>
                   <div style="font-size: 11.5px; color: #6c6c6c;">{{ cloneResultadoTotalLabel }}</div>
                   <div style="flex: 1;"></div>
+                  <div onClick="{{ onEnviarCloneParaBusca }}" style="{{ enviarCloneBuscaBtnStyle }}" style-hover="background: #E75613;">{{ enviarCloneBuscaBtnLabel }}</div>
                   <div onClick="{{ onFecharCloneResultado }}" style="font-size: 11.5px; color: #A09BA2; text-decoration: underline; cursor: pointer;">fechar</div>
                 </div>
                 <div style="display: grid; grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr) 90px 100px; gap: 10px; padding: 0 6px; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">
@@ -2681,6 +2682,24 @@ class Component extends DCLogic {
     })
       .then(r => this.setState({ mCloneBuscando: false, mCloneResultado: r, mFiltroPainelRecolhido: true }))
       .catch(e => this.setState({ mCloneBuscando: false, mCloneErro: 'Não foi possível buscar empresas parecidas: ' + e.message }));
+  }
+
+  // transforma o resultado do lookalike (uma lista PRONTA de CNPJs, não um
+  // filtro) na mesma listagem da tela de Busca — reaproveita toda a seleção/
+  // exportação/enriquecimento que já existe lá, em vez de duplicar essa UI
+  // aqui. Já marca todas as linhas selecionadas (é um resultado pequeno, até
+  // 50, então pré-selecionar tudo poupa um passo de quem for exportar/enriquecer).
+  enviarCloneParaBusca() {
+    const st = this.state;
+    if (!st.mCloneResultado || !st.mCloneResultado.itens.length) return;
+    const cnpjs = st.mCloneResultado.itens.map(it => it.cnpj);
+    apiPost('/api/busca/por-cnpjs', { cnpjs })
+      .then(r => this.setState({
+        screen: 'busca', open: null, buscaResultado: r, searched: true,
+        selected: r.linhas.map(l => l.cnpj), buscaSelecaoTruncada: null,
+        savedActive: st.mClonePerfil ? 'Clone de ' + st.mClonePerfil.razao_social : '',
+      }))
+      .catch(e => this.setState({ mCloneErro: 'Não foi possível enviar pra Busca: ' + e.message }));
   }
 
   // atalho "Perfil salvo" dentro da própria tela de Busca — mesma tradução do
@@ -4655,6 +4674,9 @@ class Component extends DCLogic {
         (st.mCloneBuscando ? 'background: #eef0f2; color: #A09BA2;' : 'background: ' + ORANGE + '; color: #fff;'),
       hasCloneResultado: !!st.mCloneResultado,
       onFecharCloneResultado: () => this.setState({ mCloneResultado: null }),
+      onEnviarCloneParaBusca: () => this.enviarCloneParaBusca(),
+      enviarCloneBuscaBtnLabel: 'Enviar pra Busca (exportar/enriquecer)',
+      enviarCloneBuscaBtnStyle: 'background: ' + ORANGE + '; color: #fff; border-radius: 999px; padding: 7px 14px; font-family: \'Neo Sans Pro\', sans-serif; font-weight: 700; font-size: 11.5px; cursor: pointer; white-space: nowrap;',
       cloneResultadoTotalLabel: st.mCloneResultado ? fmtInt(st.mCloneResultado.total) + ' empresa(s) com ' + st.mCloneMinSimilaridade + '%+ de similaridade' : '',
       cloneItens: st.mCloneResultado ? st.mCloneResultado.itens.map(it => ({
         razao_social: it.razao_social, uf: it.uf || '—', municipio: it.municipio || '—',
