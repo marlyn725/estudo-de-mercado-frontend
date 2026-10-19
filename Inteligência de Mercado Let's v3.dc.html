@@ -4625,6 +4625,12 @@ class Component extends DCLogic {
       mercadoFiltroDesatualizado: !!(st.mEstudo && st.mFiltroAplicado !== JSON.stringify(this.buildFiltroMercado())),
 
       // --- "Clonar um cliente" (lookalike) ---
+      // faltava expor esse valor pro template de volta — o campo sabia o que foi
+      // digitado (estado interno atualizava certinho), mas a caixinha de texto
+      // nunca recebia esse valor pra mostrar, então toda letra "sumia" na hora
+      // (bug relatado: campo não aceita digitar nem colar).
+      mCloneCnpjQuery: st.mCloneCnpjQuery,
+      mCloneErro: st.mCloneErro,
       onMCloneCnpjQuery: (e) => this.setState({ mCloneCnpjQuery: e.target.value, mCloneErro: null }),
       onClonarCliente: () => this.clonarCliente(),
       clonarBtnLabel: st.mCloneCarregando ? 'Buscando CNPJ…' : (st.mClonePerfil ? 'Clonar outro CNPJ' : 'Clonar'),
