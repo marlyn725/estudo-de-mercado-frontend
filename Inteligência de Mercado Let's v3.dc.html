@@ -984,6 +984,12 @@ a:hover { opacity: .75; }
                         <div onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</div>
                       </sc-for>
                     </div>
+                    <sc-if value="{{ exportSegmentoVisivel }}" hint-placeholder-val="{{ false }}">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #A09BA2; font-weight: 700; white-space: nowrap;">Segmento</div>
+                        <input value="{{ buscaSegmentoNome }}" onChange="{{ onBuscaSegmentoNome }}" placeholder="ex.: Bio Energia" style="flex: 1; max-width: 260px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 7px 10px; font-family: 'Open Sans', sans-serif; font-size: 12px; color: #000;">
+                      </div>
+                    </sc-if>
                     <div style="font-size: 11.5px; color: #6c6c6c;">{{ exportNote }}</div>
                   </div>
                 </sc-if>
@@ -1584,7 +1590,7 @@ const CONF = {
   r: { color: '#d64545', label: 'Não encontrado ou conflitante — não preenchido' }
 };
 
-const ALL_EXPORT_COLS = ['Razão social', 'Nome fantasia', 'CNPJ', 'Telefone', 'E-mail', 'UF', 'Município', 'CNAE', 'Situação', 'Porte', 'Capital social', 'Confiança', 'Cliente Let\'s'];
+const ALL_EXPORT_COLS = ['Razão social', 'Nome fantasia', 'CNPJ', 'Telefone', 'E-mail', 'Endereço', 'UF', 'Município', 'CNAE', 'Situação', 'Porte', 'Capital social', 'Confiança', 'Cliente Let\'s', 'Segmento'];
 
 const API_BASE = 'http://127.0.0.1:8000';
 function apiGet(path) {
@@ -1702,8 +1708,12 @@ class Component extends DCLogic {
       apiError: null,
       selected: [],
       exportOpen: false,
-      exportColsSel: ['Razão social', 'CNPJ', 'Telefone', 'E-mail', 'UF', 'Município', 'CNAE', 'Confiança', 'Cliente Let\'s'],
+      exportColsSel: ['Razão social', 'CNPJ', 'Telefone', 'E-mail', 'Endereço', 'UF', 'Município', 'CNAE', 'Confiança', 'Cliente Let\'s', 'Segmento'],
       format: 'xlsx',
+      // texto livre repetido em toda linha da coluna "Segmento" — preenchido sozinho
+      // quando a lista vem de um Setor do Mercado/Clonar cliente, editável à mão pro
+      // resto dos casos (busca manual por CNAE, sem um Setor nomeado por trás)
+      buscaSegmentoNome: '',
       drawerId: null,
       drawerData: null,
       enrichJobId: null,
@@ -2615,7 +2625,10 @@ class Component extends DCLogic {
       savedActive: seg.nome, screen: 'busca', open: null, selected: [], buscaSelecaoTruncada: null,
       ufs: f.ufs, sits: f.situacoes, portes: f.portes, cnaes: f.cnaes,
       cnaeSecundario: f.cnaes_incluir_secundario || false,
-      matrizFilial: f.matriz_filial || [], regionais: f.regionais || [], municipiosHerdados: f.municipios || []
+      matrizFilial: f.matriz_filial || [], regionais: f.regionais || [], municipiosHerdados: f.municipios || [],
+      // segmentação salva não guarda um Setor nomeado (só códigos de CNAE avulsos) —
+      // zera pra não arrastar o nome de um Setor de uma lista anterior sem relação
+      buscaSegmentoNome: '',
     });
     this.backfillCnaeCache(f.cnaes, 'cnaeCache');
     this.recalcularEstimativa();
@@ -2657,7 +2670,7 @@ class Component extends DCLogic {
   }
 
   gerarListaDoPerfil() {
-    this.aplicarFiltroMercadoNaBusca(this.buildFiltroMercado(), '');
+    this.aplicarFiltroMercadoNaBusca(this.buildFiltroMercado(), '', this.state.mSetorSelecionadoNome || '');
   }
 
   // "Clonar um cliente" (lookalike) — passo 1: extrai o perfil do CNPJ-modelo
@@ -2714,6 +2727,7 @@ class Component extends DCLogic {
         screen: 'busca', open: null, buscaResultado: r, searched: true,
         selected: r.linhas.map(l => l.cnpj), buscaSelecaoTruncada: null,
         savedActive: st.mClonePerfil ? 'Clone de ' + st.mClonePerfil.razao_social : '',
+        buscaSegmentoNome: (st.mClonePerfil && st.mClonePerfil.setor_sugerido_nome) || '',
       }))
       .catch(e => this.setState({ mCloneErro: 'Não foi possível enviar pra Busca: ' + e.message }));
   }
@@ -2722,10 +2736,15 @@ class Component extends DCLogic {
   // "Gerar lista deste perfil" do estudo de Mercado, mas a partir de um perfil
   // já salvo (perfil.filtro), sem precisar ir até a tela de Mercado antes.
   aplicarPerfilNaBusca(perfil) {
-    this.aplicarFiltroMercadoNaBusca(perfil.filtro, perfil.nome);
+    const setorSalvo = (this.state.domSetores || []).find(s => s.codigo === perfil.filtro.setor);
+    this.aplicarFiltroMercadoNaBusca(perfil.filtro, perfil.nome, setorSalvo ? setorSalvo.descricao : '');
   }
 
-  aplicarFiltroMercadoNaBusca(filtroMercado, nomePerfil) {
+  // segmentoNome vira a coluna "Segmento" da exportação (mesmo texto em toda
+  // linha) — pega o nome do Setor de quem chamou (perfil salvo ou o painel de
+  // Mercado aberto na hora), já que o FiltroBusca devolvido por /gerar-lista só
+  // tem os códigos de CNAE expandidos, sem o nome do Setor que os gerou.
+  aplicarFiltroMercadoNaBusca(filtroMercado, nomePerfil, segmentoNome) {
     apiPost('/api/mercado/gerar-lista', filtroMercado)
       .then(filtroBusca => {
         this.setState({
@@ -2733,7 +2752,8 @@ class Component extends DCLogic {
           portes: filtroBusca.portes, cnaes: filtroBusca.cnaes, cnaeSecundario: filtroBusca.cnaes_incluir_secundario || false,
           matrizFilial: filtroBusca.matriz_filial || [],
           regionais: filtroBusca.regionais || [], municipiosHerdados: filtroBusca.municipios || [],
-          savedActive: nomePerfil, selected: [], buscaSelecaoTruncada: null
+          savedActive: nomePerfil, selected: [], buscaSelecaoTruncada: null,
+          buscaSegmentoNome: segmentoNome || '',
         });
         this.backfillCnaeCache(filtroBusca.cnaes, 'cnaeCache');
         this.recalcularEstimativa();
@@ -4419,9 +4439,15 @@ class Component extends DCLogic {
       exportCols: this.exportChips(),
       exportLabel: 'Gerar arquivo (' + st.selected.length + ')',
       exportNote: st.exportColsSel.length + ' colunas · o navegador baixa o arquivo .' + st.format,
+      // "Segmento" não é uma coluna calculada por empresa — é o texto repetido em
+      // toda linha (ver export_service.py), pra não precisar preencher isso na
+      // unha depois de exportar. Só aparece quando a coluna está marcada.
+      exportSegmentoVisivel: st.exportColsSel.indexOf('Segmento') >= 0,
+      buscaSegmentoNome: st.buscaSegmentoNome,
+      onBuscaSegmentoNome: (e) => this.setState({ buscaSegmentoNome: e.target.value }),
       onExport: () => {
         if (!st.selected.length) { this.setState({ exportOpen: false }); return; }
-        apiPost('/api/exportacoes', { cnpjs: st.selected, formato: st.format, colunas: st.exportColsSel })
+        apiPost('/api/exportacoes', { cnpjs: st.selected, formato: st.format, colunas: st.exportColsSel, segmento: st.buscaSegmentoNome })
           .then(r => { this.setState({ exportOpen: false }); window.open(API_BASE + '/api/exportacoes/' + r.export_id + '/arquivo', '_blank'); })
           .catch(e => this.setState({ apiError: 'Exportação falhou: ' + e.message }));
       },
@@ -4901,7 +4927,7 @@ class Component extends DCLogic {
       onExportarPonto: () => {
         const cnpjs = st.mPontoSelecionados.length ? st.mPontoSelecionados : pontoPageCnpjs;
         if (!cnpjs.length) return;
-        apiPost('/api/exportacoes', { cnpjs, formato: st.format, colunas: st.exportColsSel })
+        apiPost('/api/exportacoes', { cnpjs, formato: st.format, colunas: st.exportColsSel, segmento: st.mSetorSelecionadoNome || '' })
           .then(r => window.open(API_BASE + '/api/exportacoes/' + r.export_id + '/arquivo', '_blank'))
           .catch(e => this.setState({ apiError: 'Exportação falhou: ' + e.message }));
       },
