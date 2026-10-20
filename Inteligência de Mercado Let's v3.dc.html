@@ -2226,10 +2226,26 @@ class Component extends DCLogic {
   // todos os CNAEs daquela divisão e adiciona no MESMO filtro de CNAE que já existe
   // (não substitui, não vira um filtro à parte). Lista pequena (87 itens), já
   // carregada — filtra local, sem round-trip por tecla.
+  // normaliza acento+espaço antes de comparar — sem isso, digitar "bioenergia"
+  // (sem espaço, como o usuário naturalmente digita) não batia com o setor
+  // "Bio Energia" (com espaço) e a lista de sugestões ficava vazia, sem avisar
+  // nada: o texto digitado continuava na caixa, dando a falsa impressão de que
+  // o setor tinha sido aplicado, quando na verdade nenhum item foi clicado e
+  // mSetorSelecionado continuava null (bug relatado: estudo de "Bioenergia"
+  // voltou com os números de "todos os segmentos").
+  _normalizarBuscaSetor(s) {
+    let out = '';
+    for (const ch of (s || '').toLowerCase().normalize('NFD')) {
+      const cod = ch.codePointAt(0);
+      if (cod < 0x0300 || cod > 0x036f) out += ch;
+    }
+    return out.replace(/\s+/g, '');
+  }
+
   buscarSetores(q, key) {
-    const termo = (q || '').trim().toLowerCase();
+    const termo = this._normalizarBuscaSetor(q);
     const lista = !termo ? [] : this.state.domSetores.filter(s =>
-      s.descricao.toLowerCase().indexOf(termo) >= 0 || s.codigo.indexOf(termo) >= 0
+      this._normalizarBuscaSetor(s.descricao).indexOf(termo) >= 0 || s.codigo.indexOf(termo) >= 0
     ).slice(0, 30);
     this.setState({ [key]: lista });
   }
@@ -4079,7 +4095,13 @@ class Component extends DCLogic {
 
     const mCnaeLabel = (codigo) => { const found = (st.mCnaeResults || []).find(x => x.codigo === codigo); return found ? found.descricao : codigo; };
     const cnaeNames = st.mCnaes.map(mCnaeLabel);
-    const perfilNome = cnaeNames.length ? cnaeNames.join(' + ') : 'todos os segmentos';
+    // perfilNome só olhava mCnaes (Segmento CNAE manual) e nunca o Setor
+    // selecionado — um Setor SUBSTITUI os CNAEs manuais (nunca os dois juntos,
+    // ver comentário perto de mSetorList), então com um Setor ativo isso sempre
+    // caía em "todos os segmentos", escondendo do usuário que o setor realmente
+    // aplicado não bateu com o que ele pensava ter selecionado.
+    const perfilNome = st.mSetorSelecionado ? (st.mSetorSelecionadoNome || st.mSetorSelecionado)
+      : cnaeNames.length ? cnaeNames.join(' + ') : 'todos os segmentos';
     const cnpjMsg = st.cnpjQuery ? (
       !st.cnpjLocalizado ? 'digite os 14 dígitos do CNPJ'
       : st.cnpjLocalizado.erro ? 'CNPJ não encontrado na base'
