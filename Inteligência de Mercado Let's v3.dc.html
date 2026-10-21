@@ -99,34 +99,49 @@ a:hover { opacity: .75; }
         <sc-if value="{{ mFiltroPainelExpandido }}" hint-placeholder-val="{{ true }}">
           <div style="flex: 1; min-height: 0; min-width: 0; overflow-y: auto; overflow-x: hidden; padding: 12px 14px 18px; display: flex; flex-direction: column; gap: 16px;">
 
-            <!-- "Clonar um cliente" — extrai CNAE (principal+secundários), porte,
-                 faixa de capital, natureza jurídica e matriz/filial de um CNPJ
-                 real e usa isso pra pontuar o quão parecida cada empresa é (não
-                 é um filtro binário "bate/não bate"). A geografia continua vindo
-                 dos campos normais logo abaixo (Escopo/Estados/Região/Município)
+            <!-- "Clonar clientes" (semente) — extrai, de uma LISTA de CNPJs
+                 reais (1 ou mais), a FREQUÊNCIA de cada CNAE/porte/faixa de
+                 capital/natureza jurídica/matriz-filial e usa isso pra pontuar
+                 o quão parecida cada empresa candidata é. Com vários CNPJs na
+                 semente, um traço raro (presente em 1 empresa só) pesa pouco
+                 sozinho — o ruído se cancela. A geografia continua vindo dos
+                 campos normais logo abaixo (Escopo/Estados/Região/Município)
                  — por pedido do usuário, é o único critério 100% manual. -->
             <div style="display: flex; flex-direction: column; gap: 8px; padding-bottom: 14px; border-bottom: 1px solid #e3e5e8;">
-              <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Clonar um cliente</div>
+              <div style="font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #A09BA2; font-weight: 700;">Clonar clientes (semente)</div>
               <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #d8dbdf; border-radius: 6px; padding: 8px 10px; background: #fff;">
                 <span style="color: #A09BA2; font-size: 12px;">⌕</span>
-                <input value="{{ mCloneCnpjQuery }}" onChange="{{ onMCloneCnpjQuery }}" placeholder="CNPJ do cliente-modelo" style="border: none; outline: none; flex: 1; min-width: 0; font-family: ui-monospace, monospace; font-size: 12px; color: #000; background: transparent;">
+                <input value="{{ mCloneCnpjQuery }}" onChange="{{ onMCloneCnpjQuery }}" placeholder="CNPJ de um cliente bom" style="border: none; outline: none; flex: 1; min-width: 0; font-family: ui-monospace, monospace; font-size: 12px; color: #000; background: transparent;">
               </div>
               <sc-if value="{{ mCloneErro }}" hint-placeholder-val="{{ false }}">
                 <div style="font-size: 11px; color: #c0392b;">{{ mCloneErro }}</div>
               </sc-if>
               <div onClick="{{ onClonarCliente }}" style="{{ clonarBtnStyle }}">{{ clonarBtnLabel }}</div>
 
-              <sc-if value="{{ hasClonePerfil }}" hint-placeholder-val="{{ false }}">
+              <sc-if value="{{ hasCloneSemente }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <sc-for list="{{ cloneSementeChips }}" as="c" hint-placeholder-count="3">
+                    <div onClick="{{ c.onClick }}" style="display: flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; background: #fff6f2; border: 1px solid #F15A22; color: #F15A22; font-size: 11.5px; cursor: pointer; flex: 0 0 auto;" title="{{ c.titulo }}">
+                      <span style="max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ c.label }}</span><span style="font-size: 9px;">✕</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ hasClonePerfilSemente }}" hint-placeholder-val="{{ false }}">
                 <div style="background: #fff6f2; border: 1px solid #F15A22; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
                   <div style="font-size: 11.5px; font-weight: 700; color: #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">✨ {{ mClonePerfilResumo.titulo }}</div>
                   <div style="font-size: 10.5px; color: #6c6c6c; line-height: 1.4;">{{ mClonePerfilResumo.detalhe }}</div>
+                  <sc-if value="{{ mCloneAvisoPoucaSemente }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size: 10px; color: #8a6400; background: #fff3cd; border-radius: 6px; padding: 6px 8px; line-height: 1.4;">Com só 1-2 empresas, o resultado fica mais sensível a algo atípico de UMA delas — considere adicionar mais na semente.</div>
+                  </sc-if>
                   <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                     <span style="font-size: 10.5px; color: #2F323B; font-weight: 700;">Similaridade mínima</span>
                     <span style="font-size: 10.5px; color: #F15A22; font-weight: 700;">{{ mCloneMinSimilaridadeLabel }}</span>
                   </div>
                   <input type="range" min="40" max="95" step="5" value="{{ mCloneMinSimilaridade }}" onChange="{{ onMudarCloneMin }}">
                   <div onClick="{{ onBuscarLookalike }}" style="{{ buscarLookalikeBtnStyle }}">{{ buscarLookalikeBtnLabel }}</div>
-                  <div style="font-size: 10px; color: #A09BA2; line-height: 1.4;">Usa a geografia escolhida abaixo (Escopo/Estados/Região/Município) — o resto do perfil vem do CNPJ-modelo.</div>
+                  <div style="font-size: 10px; color: #A09BA2; line-height: 1.4;">Usa a geografia escolhida abaixo (Escopo/Estados/Região/Município) — o resto do perfil vem da semente.</div>
                 </div>
               </sc-if>
             </div>
@@ -1043,7 +1058,7 @@ a:hover { opacity: .75; }
             <sc-if value="{{ hasCloneResultado }}" hint-placeholder-val="{{ false }}">
               <div style="background: #FFFFFF; border: 1px solid #e3e5e8; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 12px;">
                 <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;">
-                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000;">Empresas parecidas com {{ mClonePerfil.razao_social }}</div>
+                  <div style="font-family: 'Neo Sans Pro', sans-serif; font-size: 15px; font-weight: 700; color: #000;">{{ cloneResultadoTitulo }}</div>
                   <div style="font-size: 11.5px; color: #6c6c6c;">{{ cloneResultadoTotalLabel }}</div>
                   <div style="flex: 1;"></div>
                   <div onClick="{{ onEnviarCloneParaBusca }}" style="{{ enviarCloneBuscaBtnStyle }}" style-hover="background: #E75613;">{{ enviarCloneBuscaBtnLabel }}</div>
@@ -1730,10 +1745,14 @@ class Component extends DCLogic {
       mEscopo: 'nacional',
       mFiltroPainelRecolhido: false,
       mConcentracaoAberta: false,
-      // "Clonar um cliente" (lookalike) — ver app/services/mercado_service.py
-      // calcular_similaridade() pro cálculo do score no backend
+      // "Clonar clientes" (lookalike por semente) — ver app/services/mercado_service.py
+      // calcular_similaridade() pro cálculo do score no backend. mCloneCnpjs é a
+      // lista de CNPJs da semente (1 ou mais); mCloneCnpjNomes guarda razão social
+      // por CNPJ só pra mostrar nome em vez de número cru nos chips.
       mCloneCnpjQuery: '',
-      mClonePerfil: null,
+      mCloneCnpjs: [],
+      mCloneCnpjNomes: {},
+      mCloneSementePerfil: null,
       mCloneCarregando: false,
       mCloneErro: null,
       mCloneMinSimilaridade: 60,
@@ -2673,37 +2692,64 @@ class Component extends DCLogic {
     this.aplicarFiltroMercadoNaBusca(this.buildFiltroMercado(), '', this.state.mSetorSelecionadoNome || '');
   }
 
-  // "Clonar um cliente" (lookalike) — passo 1: extrai o perfil do CNPJ-modelo
-  // (CNAE principal+secundários, porte, faixa de capital, natureza jurídica,
-  // matriz/filial). A geografia NÃO entra aqui — continua vindo dos campos
-  // normais do painel (Escopo/Estados/Região/Município), só na hora de buscar.
+  // "Clonar clientes" (lookalike por semente) — adiciona 1 CNPJ à lista da
+  // semente: valida que existe na base (GET /clone/{cnpj}, reaproveitado como
+  // preview de 1 empresa só) e, se já não estiver na lista, inclui e recalcula o
+  // perfil AGREGADO da semente inteira. Com 1 CNPJ só na semente o resultado é
+  // idêntico ao comportamento de antes; com vários, o ruído de uma empresa
+  // atípica se dilui sozinho (ver mercado_service.py).
   clonarCliente() {
     const digits = (this.state.mCloneCnpjQuery || '').replace(/\D/g, '');
     if (digits.length !== 14) {
       this.setState({ mCloneErro: 'Digite um CNPJ válido (14 dígitos).' });
       return;
     }
-    this.setState({ mCloneCarregando: true, mCloneErro: null, mClonePerfil: null, mCloneResultado: null });
+    if (this.state.mCloneCnpjs.indexOf(digits) >= 0) {
+      this.setState({ mCloneErro: 'Esse CNPJ já está na semente.', mCloneCnpjQuery: '' });
+      return;
+    }
+    this.setState({ mCloneCarregando: true, mCloneErro: null });
     apiGet('/api/mercado/clone/' + digits)
-      .then(perfil => this.setState({ mCloneCarregando: false, mClonePerfil: perfil }))
+      .then(perfil => {
+        const nomes = { ...this.state.mCloneCnpjNomes, [digits]: perfil.razao_social };
+        const cnpjs = this.state.mCloneCnpjs.concat([digits]);
+        this.setState({ mCloneCarregando: false, mCloneCnpjQuery: '', mCloneCnpjs: cnpjs, mCloneCnpjNomes: nomes, mCloneResultado: null });
+        this.atualizarPerfilSemente(cnpjs);
+      })
       .catch(e => this.setState({
         mCloneCarregando: false,
         mCloneErro: e.message.indexOf('404') >= 0 ? 'CNPJ não encontrado na base.' : 'Não foi possível buscar esse CNPJ: ' + e.message,
       }));
   }
 
-  // passo 2: busca as empresas parecidas de verdade — usa a geografia (Escopo/
-  // Estados/Região/Município) já selecionada no resto do painel + o limiar de
+  removerCnpjSemente(cnpj) {
+    const cnpjs = this.state.mCloneCnpjs.filter(c => c !== cnpj);
+    this.setState({ mCloneCnpjs: cnpjs, mCloneResultado: null });
+    if (cnpjs.length) this.atualizarPerfilSemente(cnpjs);
+    else this.setState({ mCloneSementePerfil: null });
+  }
+
+  // recalcula o resumo (frequência de CNAE/porte/capital/natureza/matriz-filial)
+  // toda vez que a lista de CNPJs da semente muda — é só pra mostrar na tela
+  // antes de buscar; a busca de verdade manda a lista inteira de novo.
+  atualizarPerfilSemente(cnpjs) {
+    apiPost('/api/mercado/clone/semente', { cnpjs })
+      .then(perfil => this.setState({ mCloneSementePerfil: perfil }))
+      .catch(e => this.setState({ mCloneErro: 'Não foi possível calcular o perfil da semente: ' + e.message }));
+  }
+
+  // busca as empresas parecidas de verdade — usa a geografia (Escopo/Estados/
+  // Região/Município) já selecionada no resto do painel + o limiar de
   // similaridade do slider. buildFiltroMercado() reaproveitado aqui só serve
   // pra geografia/situação no backend (Setor/Porte/Capital do filtro normal são
-  // ignorados nessa busca — quem define isso é o perfil clonado).
+  // ignorados nessa busca — quem define isso é a semente clonada).
   buscarLookalike() {
     const st = this.state;
-    if (!st.mClonePerfil || st.mCloneBuscando) return;
+    if (!st.mCloneCnpjs.length || st.mCloneBuscando) return;
     if (st.mEscopo === 'regional' && this.shownUfs().length === 0) return;
     this.setState({ mCloneBuscando: true, mCloneErro: null });
     apiPost('/api/mercado/clone/buscar', {
-      cnpj_referencia: st.mClonePerfil.cnpj,
+      cnpjs_referencia: st.mCloneCnpjs,
       filtro: this.buildFiltroMercado({ setor: null, cnaes: [], portes: [], faixas_capital: [], matriz_filial: [] }),
       min_similaridade: st.mCloneMinSimilaridade,
       apenas_nao_clientes: true,
@@ -2722,12 +2768,14 @@ class Component extends DCLogic {
     const st = this.state;
     if (!st.mCloneResultado || !st.mCloneResultado.itens.length) return;
     const cnpjs = st.mCloneResultado.itens.map(it => it.cnpj);
+    const semente = st.mCloneResultado.perfil_referencia;
+    const nomeSemente = semente.quantidade === 1 ? semente.razoes_sociais[0] : semente.quantidade + ' empresas';
     apiPost('/api/busca/por-cnpjs', { cnpjs })
       .then(r => this.setState({
         screen: 'busca', open: null, buscaResultado: r, searched: true,
         selected: r.linhas.map(l => l.cnpj), buscaSelecaoTruncada: null,
-        savedActive: st.mClonePerfil ? 'Clone de ' + st.mClonePerfil.razao_social : '',
-        buscaSegmentoNome: (st.mClonePerfil && st.mClonePerfil.setor_sugerido_nome) || '',
+        savedActive: 'Clone de ' + nomeSemente,
+        buscaSegmentoNome: semente.setor_sugerido_nome || '',
       }))
       .catch(e => this.setState({ mCloneErro: 'Não foi possível enviar pra Busca: ' + e.message }));
   }
@@ -4700,19 +4748,31 @@ class Component extends DCLogic {
       mCloneErro: st.mCloneErro,
       onMCloneCnpjQuery: (e) => this.setState({ mCloneCnpjQuery: e.target.value, mCloneErro: null }),
       onClonarCliente: () => this.clonarCliente(),
-      clonarBtnLabel: st.mCloneCarregando ? 'Buscando CNPJ…' : (st.mClonePerfil ? 'Clonar outro CNPJ' : 'Clonar'),
+      clonarBtnLabel: st.mCloneCarregando ? 'Buscando CNPJ…' : 'Adicionar à semente',
       clonarBtnStyle: 'border-radius: 999px; padding: 8px 14px; font-size: 12px; font-weight: 700; text-align: center; cursor: pointer; ' +
         (st.mCloneCarregando ? 'background: #eef0f2; color: #A09BA2;' : 'border: 1px solid ' + ORANGE + '; color: ' + ORANGE + ';'),
-      hasClonePerfil: !!st.mClonePerfil,
-      mClonePerfil: st.mClonePerfil,
-      mClonePerfilResumo: st.mClonePerfil ? {
-        titulo: st.mClonePerfil.razao_social,
-        detalhe: [
-          st.mClonePerfil.setor_sugerido_nome || (st.mClonePerfil.cnae_principal_descricao || 'CNAE ' + st.mClonePerfil.cnae_principal),
-          st.mClonePerfil.porte_negocio, st.mClonePerfil.faixa_capital,
-          st.mClonePerfil.matriz_filial === '1' ? 'Matriz' : 'Filial',
-        ].filter(Boolean).join(' · ') + ' · ' + st.mClonePerfil.qtd_cnaes_secundarios + ' CNAE(s) secundário(s)',
-      } : null,
+      hasCloneSemente: st.mCloneCnpjs.length > 0,
+      cloneSementeChips: st.mCloneCnpjs.map(cnpj => ({
+        label: st.mCloneCnpjNomes[cnpj] || cnpj, titulo: st.mCloneCnpjNomes[cnpj] || cnpj,
+        onClick: (e) => { e.stopPropagation(); this.removerCnpjSemente(cnpj); },
+      })),
+      hasClonePerfilSemente: !!(st.mCloneSementePerfil && st.mCloneSementePerfil.quantidade > 0),
+      mCloneAvisoPoucaSemente: !!(st.mCloneSementePerfil && st.mCloneSementePerfil.quantidade > 0 && st.mCloneSementePerfil.quantidade < 3),
+      mClonePerfilResumo: (st.mCloneSementePerfil && st.mCloneSementePerfil.quantidade > 0) ? (() => {
+        const p = st.mCloneSementePerfil;
+        const topCnae = p.cnaes_frequentes[0];
+        const topPorte = p.portes[0];
+        const topFaixa = p.faixas_capital[0];
+        return {
+          titulo: p.quantidade === 1 ? p.razoes_sociais[0] : p.quantidade + ' empresas na semente',
+          detalhe: [
+            p.setor_sugerido_nome,
+            topCnae ? (topCnae.descricao || ('CNAE ' + topCnae.valor)) + ' (' + topCnae.pct + '%)' : null,
+            topPorte ? topPorte.valor + ' (' + topPorte.pct + '%)' : null,
+            topFaixa ? topFaixa.valor + ' (' + topFaixa.pct + '%)' : null,
+          ].filter(Boolean).join(' · '),
+        };
+      })() : null,
       mCloneMinSimilaridade: st.mCloneMinSimilaridade,
       mCloneMinSimilaridadeLabel: st.mCloneMinSimilaridade + '%',
       onMudarCloneMin: (e) => this.setState({ mCloneMinSimilaridade: parseInt(e.target.value, 10) }),
@@ -4725,6 +4785,10 @@ class Component extends DCLogic {
       onEnviarCloneParaBusca: () => this.enviarCloneParaBusca(),
       enviarCloneBuscaBtnLabel: 'Enviar pra Busca (exportar/enriquecer)',
       enviarCloneBuscaBtnStyle: 'background: ' + ORANGE + '; color: #fff; border-radius: 999px; padding: 7px 14px; font-family: \'Neo Sans Pro\', sans-serif; font-weight: 700; font-size: 11.5px; cursor: pointer; white-space: nowrap;',
+      cloneResultadoTitulo: st.mCloneResultado ? (() => {
+        const p = st.mCloneResultado.perfil_referencia;
+        return 'Empresas parecidas com ' + (p.quantidade === 1 ? p.razoes_sociais[0] : 'a semente (' + p.quantidade + ' empresas)');
+      })() : '',
       cloneResultadoTotalLabel: st.mCloneResultado ? fmtInt(st.mCloneResultado.total) + ' empresa(s) com ' + st.mCloneMinSimilaridade + '%+ de similaridade' : '',
       cloneItens: st.mCloneResultado ? st.mCloneResultado.itens.map(it => ({
         razao_social: it.razao_social, uf: it.uf || '—', municipio: it.municipio || '—',
